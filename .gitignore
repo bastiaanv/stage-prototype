@@ -1,3 +1,6 @@
 .DS_Store
 stage.cps/obj/
+stage.cps/bin/
 stage.main/obj/
+stage.main/bin/
+.vscode/
