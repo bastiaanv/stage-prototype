@@ -2,6 +2,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\stage.cps\stage.cps.csproj" />
+    <ProjectReference Include="..\stage.data\stage.data.csproj" />
+    <ProjectReference Include="..\stage.domain\stage.domain.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

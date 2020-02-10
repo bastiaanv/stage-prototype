@@ -1,4 +1,4 @@
-namespace stage.cps.formulas {
+namespace stage.data.formulas {
     public class Chainsaw : Formula {
         private readonly double _deltaPassiveCooling;
         private readonly double _deltaActiveHeating;

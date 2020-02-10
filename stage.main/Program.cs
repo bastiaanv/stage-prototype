@@ -1,16 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using stage.cps;
-using stage.cps.model;
+using stage.data;
+using stage.domain;
 
 namespace stage.main {
     class Program {
         static void Main(string[] args) {
             List<Snapshot> snapshots = DataGenerator.GenerateLinearData(96);
-
-            foreach(Snapshot snapshot in snapshots) {
-                Console.WriteLine(snapshot.When.ToShortTimeString() + " with " + snapshot.Value);
-            }
+            CyberPhysicalSystem cps = CyberPhysicalSystem.MakeInstance(snapshots, 20, 18);
         }
     }
 }

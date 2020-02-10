@@ -1,4 +1,4 @@
-namespace stage.cps.formulas {
+namespace stage.data.formulas {
     public interface Formula {
         double next();
 

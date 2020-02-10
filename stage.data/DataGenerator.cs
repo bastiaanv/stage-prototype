@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System;
-using stage.cps.model;
-using stage.cps.formulas;
+using stage.domain;
+using stage.data.formulas;
 
-namespace stage.cps {
+namespace stage.data {
     public class DataGenerator {
 
         // Per day 96 quarters (15 minutes)
