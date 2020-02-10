@@ -27,8 +27,8 @@ namespace stage.cps {
             return new CyberPhysicalSystem(deltaPassiveCooling, minTemp, deltaActiveHeating, deltaActiveCooling, initTemp);
         }
 
-        private double Calculate(double actionHeating, double actionCooling) {
-            return -_deltaPasiveCooling * currentTemp + _minTemp + _deltaActiveHeating * actionHeating - _deltaActiveCooling * actionCooling;
+        private void Calculate(double actionHeating, double actionCooling) {
+            currentTemp = -_deltaPasiveCooling * currentTemp + _minTemp + _deltaActiveHeating * actionHeating - _deltaActiveCooling * actionCooling;
         }
         
     }
