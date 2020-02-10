@@ -6,7 +6,7 @@ namespace stage.cps {
     public static class Trainer {
         public static double CalculatePassiveCooling(List<Snapshot> snapshots) {
             List<double> deltaValues = new List<double>();
-            for(int i = 0; i < snapshots.Count; i++) {
+            for(int i = 0; i < snapshots.Count-1; i++) {
 
                 Snapshot snapshot = snapshots[i];
                 if (snapshot.HeatingPercentage == 0 && snapshot.CoolingPercentage == 0) {
@@ -20,11 +20,11 @@ namespace stage.cps {
 
         public static double CalculateActiveHeating(List<Snapshot> snapshots) {
             List<double> deltaValues = new List<double>();
-            for(int i = 0; i < snapshots.Count; i++) {
+            for(int i = 0; i < snapshots.Count-1; i++) {
 
                 Snapshot snapshot = snapshots[i];
                 if (snapshot.HeatingPercentage > 0 && snapshot.CoolingPercentage == 0) {
-                    double deltaValue = snapshots[i+1].Value - snapshot.Value;
+                    double deltaValue = (snapshots[i+1].Value - snapshot.Value) * snapshot.HeatingPercentage;
                     deltaValues.Add(deltaValue);
                 }
             }
@@ -34,11 +34,11 @@ namespace stage.cps {
 
         public static double CalculateActiveCooling(List<Snapshot> snapshots) {
             List<double> deltaValues = new List<double>();
-            for(int i = 0; i < snapshots.Count; i++) {
+            for(int i = 0; i < snapshots.Count-1; i++) {
 
                 Snapshot snapshot = snapshots[i];
                 if (snapshot.HeatingPercentage == 0 && snapshot.CoolingPercentage > 0) {
-                    double deltaValue = snapshots[i+1].Value - snapshot.Value;
+                    double deltaValue = (snapshots[i+1].Value - snapshot.Value) * snapshot.CoolingPercentage;
                     deltaValues.Add(deltaValue);
                 }
             }
