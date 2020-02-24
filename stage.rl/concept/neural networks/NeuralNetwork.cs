@@ -86,10 +86,10 @@ The accuracy is the mean squared error.
 
                 // check the accuracy before training
                 var (x_input, y_input) = sess.run((x_inputs_data, y_inputs_data));
-                sess.run(accuracy, (input, x_input), (y_true, y_input));
+                print($"Accuracy before: {sess.run(accuracy, (input, x_input), (y_true, y_input))}");
 
                 // training
-                foreach (var i in range(10000)) {
+                foreach (var i in range(100)) {
                     // by sampling some input data (fetching)
                     (x_input, y_input) = sess.run((x_inputs_data, y_inputs_data));
                     var (_, loss) = sess.run((train_op, loss_op), (input, x_input), (y_true, y_input));
@@ -101,7 +101,7 @@ The accuracy is the mean squared error.
 
                 // Finally, we check our final accuracy
                 (x_input, y_input) = sess.run((x_inputs_data, y_inputs_data));
-                print($"Accuracy: {sess.run(accuracy, (input, x_input), (y_true, y_input))}");
+                print($"Accuracy after: {sess.run(accuracy, (input, x_input), (y_true, y_input))}");
             }
 
             print($"Time taken: {sw.Elapsed.TotalSeconds}s");
