@@ -2,24 +2,24 @@ using System.Collections.Generic;
 using stage.domain;
 
 namespace stage.cps {
-    public class CyberPhysicalSystem {
+    public class CyberPhysicalSystem : iCyberPhysicalSystem {
 
         private readonly double _deltaPasiveCooling = 0;
         private readonly double _deltaActiveHeating = 0;
         private readonly double _deltaActiveCooling = 0;
         private readonly double _minTemp = 0;
 
-        private double currentTemp = 0;
+        public double CurrentTemp { get; private set; } = 0;
 
         private CyberPhysicalSystem(double deltaPasiveCooling, double minTemp, double deltaActiveHeating, double deltaActiveCooling, double initTemp) {
             _deltaPasiveCooling = deltaPasiveCooling;
             _minTemp = minTemp;
             _deltaActiveHeating = deltaActiveHeating;
             _deltaActiveCooling = deltaActiveCooling;
-            currentTemp = initTemp;
+            CurrentTemp = initTemp;
         }
 
-        public static CyberPhysicalSystem MakeInstance(List<Snapshot> snapshots, double initTemp, double minTemp) {
+        public static iCyberPhysicalSystem MakeInstance(List<Snapshot> snapshots, double initTemp, double minTemp) {
             double deltaPassiveCooling = Trainer.CalculatePassiveCooling(snapshots);
             double deltaActiveHeating = Trainer.CalculateActiveHeating(snapshots);
             double deltaActiveCooling = Trainer.CalculateActiveCooling(snapshots);
@@ -27,9 +27,8 @@ namespace stage.cps {
             return new CyberPhysicalSystem(deltaPassiveCooling, minTemp, deltaActiveHeating, deltaActiveCooling, initTemp);
         }
 
-        private void Calculate(double actionHeating, double actionCooling) {
-            currentTemp = -_deltaPasiveCooling * currentTemp + _minTemp + _deltaActiveHeating * actionHeating - _deltaActiveCooling * actionCooling;
+        public void Step(double actionHeating, double actionCooling) {
+            CurrentTemp = -_deltaPasiveCooling * CurrentTemp + _minTemp + _deltaActiveHeating * actionHeating - _deltaActiveCooling * actionCooling;
         }
-        
     }
 }

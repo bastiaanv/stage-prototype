@@ -10,4 +10,8 @@
     <PackageReference Include="TensorFlow.NET" Version="0.14.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\stage.domain\stage.domain.csproj" />
+  </ItemGroup>
+
 </Project>
