@@ -1,4 +1,2 @@
 .DS_Store
-*/obj/
-*/bin/
-.vscode/
+node_modules/*
