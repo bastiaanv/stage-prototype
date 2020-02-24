@@ -25,12 +25,9 @@ namespace stage.rl.concept {
             var X = tf.placeholder(tf.float32);
             var Y = tf.placeholder(tf.float32);
 
-            // Set model weights 
-            // We can set a fixed init value in order to debug
-            // var rnd1 = rng.randn<float>();
-            // var rnd2 = rng.randn<float>();
-            var W = tf.Variable(-0.06f, name: "weight");
-            var b = tf.Variable(-0.73f, name: "bias");
+            // Set model weights and biases with a random value
+            var W = tf.Variable(rng.randn<float>(), name: "weight");
+            var b = tf.Variable(rng.randn<float>(), name: "bias");
 
             // Construct a linear model
             var pred = tf.add(tf.multiply(X, W), b);
