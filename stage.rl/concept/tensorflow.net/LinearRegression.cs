@@ -1,3 +1,5 @@
+// CREDITS TO SciSharp FOR THIS EXAMPLE. All Rights Reserved to them
+
 using static Tensorflow.Binding;
 using NumSharp;
 using System;
