@@ -2,7 +2,7 @@ using static Tensorflow.Binding;
 using System.Diagnostics;
 using Tensorflow;
 
-namespace stage.rl.concept.neural_networks {
+namespace stage.rl.concept {
     public class NeuralNetwork : ITensorFlow {
         Tensor input = null;
         Tensor x_inputs_data = null;
@@ -87,7 +87,7 @@ The accuracy is the mean squared error.
                 sess.run(accuracy, (input, x_input), (y_true, y_input));
 
                 // training
-                foreach (var i in range(5000)) {
+                foreach (var i in range(10000)) {
                     // by sampling some input data (fetching)
                     (x_input, y_input) = sess.run((x_inputs_data, y_inputs_data));
                     var (_, loss) = sess.run((train_op, loss_op), (input, x_input), (y_true, y_input));
@@ -99,7 +99,9 @@ The accuracy is the mean squared error.
 
                 // Finally, we check our final accuracy
                 (x_input, y_input) = sess.run((x_inputs_data, y_inputs_data));
+                print($"Accuracy before: {accuracy}");
                 sess.run(accuracy, (input, x_input), (y_true, y_input));
+                print($"Accuracy after: {accuracy}");
             }
 
             print($"Time taken: {sw.Elapsed.TotalSeconds}s");

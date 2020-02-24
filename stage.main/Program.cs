@@ -11,8 +11,8 @@ namespace stage.main {
             // List<Snapshot> snapshots = DataGenerator.GenerateLinearData(96);
             // CyberPhysicalSystem cps = CyberPhysicalSystem.MakeInstance(snapshots, 20, 18);
 
-            LinearRegression lr = new LinearRegression();
-            Console.WriteLine(lr.Run());
+            NeuralNetwork nn = new NeuralNetwork();
+            Console.WriteLine(nn.Run());
         }
     }
 }
