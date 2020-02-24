@@ -99,9 +99,7 @@ The accuracy is the mean squared error.
 
                 // Finally, we check our final accuracy
                 (x_input, y_input) = sess.run((x_inputs_data, y_inputs_data));
-                print($"Accuracy before: {accuracy}");
-                sess.run(accuracy, (input, x_input), (y_true, y_input));
-                print($"Accuracy after: {accuracy}");
+                print($"Accuracy: {sess.run(accuracy, (input, x_input), (y_true, y_input))}");
             }
 
             print($"Time taken: {sw.Elapsed.TotalSeconds}s");
