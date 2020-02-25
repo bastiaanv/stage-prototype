@@ -8,8 +8,8 @@ export class ReinforcementLearning {
     constructor(countInput: number, countHidden: number, countOutput: number) {
         this.model = tf.sequential({
             layers: [
-                tf.layers.dense({inputShape: [countInput], units: countHidden, activation: 'relu'}),
-                tf.layers.dense({units: countOutput, activation: 'softmax'}),
+                tf.layers.dense({ inputShape: [countInput], units: countHidden, activation: 'relu' }),
+                tf.layers.dense({ units: countOutput }),
             ]
         });
 

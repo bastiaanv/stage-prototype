@@ -17,6 +17,6 @@
   },
   "homepage": "https://github.com/bastiaanv/stage-prototype#readme",
   "dependencies": {
-    "@tensorflow/tfjs-node": "^1.5.2"
+    "@tensorflow/tfjs-node": "1.2.11"
   }
 }
