@@ -9,19 +9,19 @@ export class DataGenerator {
 
         // Start time is today at 00:00 AM
         const time = new Date();
-        time.setHours(0, 0, 0, 0);
+        time.setUTCHours(0, 0, 0, 0);
 
         // Chainsaw like formula is used for the linear data. The temp at 00:00 is 19.5 degree
         const formula = new Chainsaw(0.10, 0.25, 23, 18, 19.5);
         for (let i = 0; i < countQuarters; i++) {
             output.push({
-                when: time,
+                when: new Date(time.getTime()),
                 value: formula.next(),
                 heatingPercentage: formula.isActivelyHeating() ? 1 : 0,
                 coolingPercentage: formula.isActivelyCooling() ? 1 : 0,
             });
 
-            time.setMinutes(time.getMinutes() + 15);
+            time.setUTCMinutes(time.getMinutes() + 15);
         }
 
         return output;
