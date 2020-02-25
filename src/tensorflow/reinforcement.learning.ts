@@ -1,6 +1,7 @@
 import * as tf from '@tensorflow/tfjs-node'
+import { CyberPhysicalSystem } from '../cps/cyber.physical.system.interface';
 
-export class Model {
+export class ReinforcementLearning {
 
     private readonly model: tf.Sequential;
 
@@ -17,5 +18,13 @@ export class Model {
             loss: 'meanSquaredError',
             metrics: ['accuracy']
         });
+    }
+
+    public train(cps: CyberPhysicalSystem) {
+
+    }
+
+    public predict() {
+        return null;
     }
 }

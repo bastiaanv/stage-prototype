@@ -1,7 +1,8 @@
 import { Snapshot } from '../models/snapshot.model';
 import { Trainer } from './trainer';
+import { CyberPhysicalSystem } from './cyber.physical.system.interface';
 
-export class CyberPhysicalSystem {
+export class RoomTemperatureApproach implements CyberPhysicalSystem {
     private readonly deltaPasiveCooling: number;
     private readonly deltaActiveHeating: number;
     private readonly deltaActiveCooling: number;
@@ -25,13 +26,13 @@ export class CyberPhysicalSystem {
         const deltaActiveHeating = Trainer.calculateActiveHeating(snapshots);
         const deltaActiveCooling = Trainer.calculateActiveCooling(snapshots);
 
-        return new CyberPhysicalSystem(deltaPassiveCooling, minTemp, deltaActiveHeating, deltaActiveCooling, initTemp);
+        return new RoomTemperatureApproach(deltaPassiveCooling, minTemp, deltaActiveHeating, deltaActiveCooling, initTemp);
     }
 
     public step(actionHeating: number, actionCooling: number): void {
         this.currentTemp = -this.deltaPasiveCooling * this.currentTemp +
                             this.minTemp +
-                            this.deltaActiveHeating * actionHeating - 
+                            this.deltaActiveHeating * actionHeating -
                             this.deltaActiveCooling * actionCooling;
     }
 }
