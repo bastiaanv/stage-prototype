@@ -47,8 +47,9 @@ The accuracy is the mean squared error.
         const y = .99;
         let e = 0.1;
         const numEpisodes = 2000;
+        let epoch = 0;
 
-        for (let epoch = 0; epoch < numEpisodes; epoch++) {
+        while (true) {
             const wallet = new FacilicomWallet();
             const cps = Object.assign( Object.create( Object.getPrototypeOf(cpsCopy)), cpsCopy);
 
@@ -87,6 +88,8 @@ The accuracy is the mean squared error.
             // Decrease chance on a random action as we progress in learning
             e = 1/( ( epoch/50 ) + 10 );
             console.log(`Facilicom points gained during epoch ${epoch}: ${wallet.getTotalValue()}`);
+
+            epoch++;
         }
     }
 
