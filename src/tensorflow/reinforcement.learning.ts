@@ -1,6 +1,8 @@
 import * as tf from '@tensorflow/tfjs-node'
 import { CyberPhysicalSystem } from '../cps/cyber.physical.system.interface';
+import { FacilicomWallet } from '../rewards/facilicom.wallet';
 import { Rank, Tensor } from '@tensorflow/tfjs-node';
+import { FacilicomCoin } from '../rewards/facilicom.coin';
 
 export class ReinforcementLearning {
 
@@ -43,23 +45,28 @@ The accuracy is the mean squared error.
         const numEpisodes = 1;
 
         for (let episode = 0; episode < numEpisodes; episode++) {
+            const wallet = new FacilicomWallet();
+
             for (let batchNr = 0; batchNr < cps.datasetSize; batchNr++) {
+                // Get action from Neural Network
                 const input = tf.tensor([[cps.getCurrentTemp()]]);
                 const actions = await (this.model.predict(input) as Tensor<Rank>).data();
 
-                // if true, then perform random action
+                // If true, then perform random action
                 if (Math.random() < e) {
                     actions[0] = Math.round(Math.random());
                     actions[1] = Math.round(Math.random());
-
-                } else {
-                    actions[0] = Math.round(actions[0]);
-                    actions[1] = Math.round(actions[1]);
                 }
 
+                // Take action
                 cps.step(actions[0], actions[1]);
+
+                // Get and save reward
+                const coins: FacilicomCoin[] = cps.getReward();
+                wallet.add(coins);
             }
 
+            // Decrease chance on a random action as we progress in learning
             e = 1/( ( episode/50 ) + 10 );
         }
     }

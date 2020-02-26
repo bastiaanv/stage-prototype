@@ -1,6 +1,9 @@
 import { Snapshot } from '../models/snapshot.model';
 import { Trainer } from './trainer';
 import { CyberPhysicalSystem } from './cyber.physical.system.interface';
+import { RewardSystem } from '../rewards/reward.system';
+import { TemperatureRewardSystem } from '../rewards/temperature.reward.system';
+import { FacilicomCoin } from '../rewards/facilicom.coin';
 
 export class RoomTemperatureApproach implements CyberPhysicalSystem {
     private readonly deltaPasiveCooling: number;
@@ -9,6 +12,8 @@ export class RoomTemperatureApproach implements CyberPhysicalSystem {
     private readonly heatingTemperature: number;
     private readonly coolingTemperature: number;
     private readonly outsideTemp: number;
+
+    private readonly rewardSystems: RewardSystem[];
 
     private currentTemp: number;
     public getCurrentTemp(): number {
@@ -26,6 +31,10 @@ export class RoomTemperatureApproach implements CyberPhysicalSystem {
         this.datasetSize        = datasetSize;
         this.heatingTemperature = heatingTemp;
         this.coolingTemperature = coolingTemp;
+
+        this.rewardSystems = [
+            new TemperatureRewardSystem(),
+        ];
     }
 
     public static make(snapshots: Snapshot[], initTemp: number, outsideTemp: number, heatingTemp: number, coolingTemp: number): CyberPhysicalSystem {
@@ -50,6 +59,17 @@ export class RoomTemperatureApproach implements CyberPhysicalSystem {
         } else if (actionCooling === 0 && actionHeating === 0 && this.currentTemp < this.outsideTemp) {
             this.currentTemp = this.outsideTemp;
         }
+    }
+
+    public getReward(): FacilicomCoin[] {
+        const reward: FacilicomCoin[] = [];
+        for (const system of this.rewardSystems) {
+            if (system instanceof TemperatureRewardSystem) {
+                reward.push(system.getReward(this.getCurrentTemp()));
+            }
+        }
+
+        return reward;
     }
 
     private calculatePassiveCooling(): number {
