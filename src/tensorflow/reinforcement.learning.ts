@@ -22,7 +22,7 @@ export class ReinforcementLearning {
         const optimizer = train.sgd(0.1);
         optimizer.minimize(() => {
             const loss = sum(square(sub(newQ, this.model(input)))) as Scalar;
-            loss.print();
+            // loss.print();
             return loss;
         });
     }
