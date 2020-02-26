@@ -1,8 +1,7 @@
 import { CyberPhysicalSystem } from '../cps/cyber.physical.system.interface';
 import { FacilicomWallet } from '../rewards/facilicom.wallet';
-import { Tensor, variable, randomNormal, Variable, tensor, backend_util, square, sub, sum, train } from '@tensorflow/tfjs-node';
+import { Tensor, variable, randomNormal, Variable, tensor, backend_util, square, sub, sum, train, Scalar } from '@tensorflow/tfjs-node';
 import { FacilicomCoin } from '../rewards/facilicom.coin';
-import * as tf from '@tensorflow/tfjs-node';
 
 export class ReinforcementLearning {
 
@@ -22,7 +21,9 @@ export class ReinforcementLearning {
     private trainModel(newQ: Tensor, input: Tensor): void {
         const optimizer = train.sgd(0.1);
         optimizer.minimize(() => {
-            return sum(square(sub(newQ, this.model(input))));
+            const loss = sum(square(sub(newQ, this.model(input)))) as Scalar;
+            loss.print();
+            return loss;
         });
     }
 
@@ -42,13 +43,14 @@ The accuracy is the mean squared error.
         this.bias2 = variable(randomNormal([countOutput]));
     }
 
-    public async train(cps: CyberPhysicalSystem) {
+    public async train(cpsCopy: CyberPhysicalSystem) {
         const y = .99;
         let e = 0.1;
         const numEpisodes = 2000;
 
-        for (let episode = 0; episode < numEpisodes; episode++) {
+        for (let epoch = 0; epoch < numEpisodes; epoch++) {
             const wallet = new FacilicomWallet();
+            const cps = Object.assign( Object.create( Object.getPrototypeOf(cpsCopy)), cpsCopy);
 
             for (let batchNr = 0; batchNr < cps.datasetSize; batchNr++) {
                 // Get q values from Neural Network
@@ -83,8 +85,8 @@ The accuracy is the mean squared error.
             }
 
             // Decrease chance on a random action as we progress in learning
-            e = 1/( ( episode/50 ) + 10 );
-            console.log(`Facilicom points gained during this epoch: ${wallet.getTotalValue()}`);
+            e = 1/( ( epoch/50 ) + 10 );
+            console.log(`Facilicom points gained during epoch ${epoch}: ${wallet.getTotalValue()}`);
         }
     }
 
