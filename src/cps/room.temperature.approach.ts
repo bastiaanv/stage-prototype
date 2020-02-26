@@ -45,7 +45,10 @@ export class RoomTemperatureApproach implements CyberPhysicalSystem {
         return new RoomTemperatureApproach(deltaPassiveCooling, outsideTemp, deltaActiveHeating, deltaActiveCooling, initTemp, heatingTemp, coolingTemp, snapshots.length);
     }
 
-    public step(actionHeating: number, actionCooling: number): void {
+    public step(actions: number[]): void {
+        const actionHeating = actions[0];
+        const actionCooling = actions[1];
+
         this.currentTemp =  this.calculatePassiveCooling() +
                             this.calculateActiveHeating(actionHeating) +
                             this.calculateActiveCooling(actionCooling);

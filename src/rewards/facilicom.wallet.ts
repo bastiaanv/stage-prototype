@@ -5,14 +5,8 @@ export class FacilicomWallet {
     private lengthLastAdd: number = 0;
 
     public add(coin: FacilicomCoin | FacilicomCoin[]): void {
-        if (Array.isArray(coin)) {
-            this.coins.push(...coin);
-            this.lengthLastAdd = coin.length;
-
-        } else {
-            this.coins.push(coin);
-            this.lengthLastAdd = 1;
-        }
+        this.coins.push(...coin);
+        this.lengthLastAdd = Array.isArray(coin) ? coin.length : 1;
     }
 
     public getTotalValue(): number {

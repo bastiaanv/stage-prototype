@@ -1,12 +1,30 @@
-import * as tf from '@tensorflow/tfjs-node'
 import { CyberPhysicalSystem } from '../cps/cyber.physical.system.interface';
 import { FacilicomWallet } from '../rewards/facilicom.wallet';
-import { Rank, Tensor } from '@tensorflow/tfjs-node';
+import { Tensor, variable, randomNormal, Variable, tensor, backend_util, square, sub, sum, train } from '@tensorflow/tfjs-node';
 import { FacilicomCoin } from '../rewards/facilicom.coin';
+import * as tf from '@tensorflow/tfjs-node';
 
 export class ReinforcementLearning {
 
-    private readonly model: tf.Sequential;
+    private readonly weights1: Variable;
+    private readonly bias1: Variable;
+    private readonly weights2: Variable;
+    private readonly bias2: Variable;
+
+    private model(x: Tensor): Tensor {
+        return x.matMul(this.weights1).add(this.bias1).relu().matMul(this.weights2).add(this.bias2);
+    }
+
+    private predict(x: Tensor): Tensor {
+        return this.model(x).argMax();
+    }
+
+    private trainModel(newQ: Tensor, input: Tensor): void {
+        const optimizer = train.sgd(0.1);
+        optimizer.minimize(() => {
+            return sum(square(sub(newQ, this.model(input))));
+        });
+    }
 
 /*
 Neural network model:
@@ -18,58 +36,78 @@ The lose function is a sigmoid cross entropy method with the AdamOptimizer as ou
 The accuracy is the mean squared error.
 */
     constructor(countInput: number, countHiddenLayer1: number, countOutput: number) {
-        this.model = tf.sequential();
-
-        this.model.add(tf.layers.dense({
-            inputShape: [countInput],
-            units: countHiddenLayer1,
-            kernelInitializer: tf.initializers.glorotUniform({seed: 0}),
-            activation: 'relu',
-            useBias: true,
-            biasInitializer: 'zeros'
-        }));
-
-        this.model.add(tf.layers.dense({
-            units: countOutput,
-            kernelInitializer: tf.initializers.randomUniform({
-                minval: 0.003, maxval: 0.003, seed: 0}),
-            activation: 'tanh',
-            useBias: true,
-            biasInitializer: 'zeros'
-        }));
+        this.weights1 = variable(randomNormal([countInput, countHiddenLayer1]));
+        this.bias1 = variable(randomNormal([countHiddenLayer1]));
+        this.weights2 = variable(randomNormal([countHiddenLayer1, countOutput]));
+        this.bias2 = variable(randomNormal([countOutput]));
     }
 
     public async train(cps: CyberPhysicalSystem) {
         const y = .99;
         let e = 0.1;
-        const numEpisodes = 1;
+        const numEpisodes = 2000;
 
         for (let episode = 0; episode < numEpisodes; episode++) {
             const wallet = new FacilicomWallet();
 
             for (let batchNr = 0; batchNr < cps.datasetSize; batchNr++) {
-                // Get action from Neural Network
-                const input = tf.tensor([[cps.getCurrentTemp()]]);
-                const actions = await (this.model.predict(input) as Tensor<Rank>).data();
+                // Get q values from Neural Network
+                const input = tensor([[cps.getCurrentTemp()]]);
+                const modelOutcome = await Promise.all([
+                    this.model(input).data(),
+                    this.predict(input).data()
+                ]);
+                const currentQ = modelOutcome[0];
+                const actions = modelOutcome[1];
 
                 // If true, then perform random action
                 if (Math.random() < e) {
-                    actions[0] = Math.round(Math.random());
-                    actions[1] = Math.round(Math.random());
+                    actions[0] = Math.round(Math.random() * currentQ.length);
                 }
 
                 // Take action
-                cps.step(actions[0], actions[1]);
-                console.log(cps.getCurrentTemp());
+                cps.step(this.actionToActionArray(actions[0], currentQ.length));
 
                 // Get and save reward
                 const coins: FacilicomCoin[] = cps.getReward();
                 wallet.add(coins);
-                console.log(wallet.getTotalValue());
+
+                // Get the new q values with the new state
+                const newInput = tensor([[cps.getCurrentTemp()]]);
+                const newQ = await (this.model(newInput)).data();
+
+                const maxNewQ = Math.max(...this.float32ArrayToArray(newQ));
+                currentQ[actions[0]] = wallet.getLastValue() + y * maxNewQ;
+
+                this.trainModel(tensor(currentQ), input);
             }
 
             // Decrease chance on a random action as we progress in learning
             e = 1/( ( episode/50 ) + 10 );
+            console.log(`Facilicom points gained during this epoch: ${wallet.getTotalValue()}`);
         }
+    }
+
+    private float32ArrayToArray(array: backend_util.TypedArray): number[] {
+        const output: number[] = [];
+        for (const item of array) {
+            output.push(item);
+        }
+
+        return output;
+    }
+
+    private actionToActionArray(index: number, length: number): number[] {
+        const output: number[] = [];
+        for (let i = 0; i < length; i++) {
+            if (i === index) {
+                output.push(1);
+
+            } else {
+                output.push(0);
+            }
+        }
+
+        return output;
     }
 }

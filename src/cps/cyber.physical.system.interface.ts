@@ -6,5 +6,5 @@ export interface CyberPhysicalSystem {
     getCurrentTemp(): number;
     getReward(): FacilicomCoin[];
 
-    step(actionHeating: number, actionCooling: number): void;
+    step(actions: number[]): void;
 }
