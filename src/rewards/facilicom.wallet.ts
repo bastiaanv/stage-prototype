@@ -6,7 +6,7 @@ export class FacilicomWallet {
 
     public add(coin: FacilicomCoin | FacilicomCoin[]): void {
         if (Array.isArray(coin)) {
-            this.coins.concat(coin);
+            this.coins.push(...coin);
             this.lengthLastAdd = coin.length;
 
         } else {

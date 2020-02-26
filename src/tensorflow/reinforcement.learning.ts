@@ -60,10 +60,12 @@ The accuracy is the mean squared error.
 
                 // Take action
                 cps.step(actions[0], actions[1]);
+                console.log(cps.getCurrentTemp());
 
                 // Get and save reward
                 const coins: FacilicomCoin[] = cps.getReward();
                 wallet.add(coins);
+                console.log(wallet.getTotalValue());
             }
 
             // Decrease chance on a random action as we progress in learning
