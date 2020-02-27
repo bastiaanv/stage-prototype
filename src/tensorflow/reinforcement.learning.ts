@@ -91,8 +91,6 @@ The accuracy is the mean squared error.
             // Decrease chance on a random action as we progress in learning
             e = 1/( ( epoch/50 ) + 10 );
             console.log(`Facilicom points gained during epoch ${epoch}: ${wallet.getTotalValue()}`);
-
-            epoch++;
         }
     }
 
