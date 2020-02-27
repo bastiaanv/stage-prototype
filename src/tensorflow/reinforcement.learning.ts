@@ -5,6 +5,7 @@ import { FacilicomCoin } from '../rewards/facilicom.coin';
 
 export class ReinforcementLearning {
 
+    // Neural network matrixes
     private readonly weights1: Variable;
     private readonly bias1: Variable;
     private readonly weights2: Variable;
