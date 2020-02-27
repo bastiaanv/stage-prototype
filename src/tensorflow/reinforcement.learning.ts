@@ -22,7 +22,7 @@ export class ReinforcementLearning {
         return this.model(x).argMax();
     }
 
-    // Train the model using the 
+    // Train the model using the new Q values and current state
     private trainModel(newQ: Tensor, input: Tensor): void {
         const optimizer = train.sgd(0.5);
         optimizer.minimize(() => {
