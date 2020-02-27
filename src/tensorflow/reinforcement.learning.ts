@@ -9,9 +9,11 @@ export class ReinforcementLearning {
     private readonly bias1: Variable;
     private readonly weights2: Variable;
     private readonly bias2: Variable;
+    private readonly weights3: Variable;
+    private readonly bias3: Variable;
 
     private model(x: Tensor): Tensor {
-        return x.matMul(this.weights1).add(this.bias1).relu().matMul(this.weights2).add(this.bias2);
+        return x.matMul(this.weights1).add(this.bias1).relu().matMul(this.weights2).add(this.bias2).relu().matMul(this.weights3).add(this.bias3);
     }
 
     private predict(x: Tensor): Tensor {
@@ -36,20 +38,21 @@ This model is trained via a reinforcement learning algorithm and uses the relu a
 The lose function is a sigmoid cross entropy method with the AdamOptimizer as our learning partner.
 The accuracy is the mean squared error.
 */
-    constructor(countInput: number, countHiddenLayer1: number, countOutput: number) {
+    constructor(countInput: number, countHiddenLayer1: number, countHiddenLayer2: number, countOutput: number) {
         this.weights1 = variable(randomNormal([countInput, countHiddenLayer1]));
         this.bias1 = variable(randomNormal([countHiddenLayer1]));
-        this.weights2 = variable(randomNormal([countHiddenLayer1, countOutput]));
-        this.bias2 = variable(randomNormal([countOutput]));
+        this.weights2 = variable(randomNormal([countHiddenLayer1, countHiddenLayer2]));
+        this.bias2 = variable(randomNormal([countHiddenLayer2]));
+        this.weights3 = variable(randomNormal([countHiddenLayer2, countOutput]));
+        this.bias3 = variable(randomNormal([countOutput]));
     }
 
     public async train(cpsCopy: CyberPhysicalSystem) {
         const y = .99;
         let e = 0.1;
         const numEpisodes = 2000;
-        let epoch = 0;
 
-        while (true) {
+        for (let epoch = 0; epoch < numEpisodes; epoch++) {
             const wallet = new FacilicomWallet();
             const cps = Object.assign( Object.create( Object.getPrototypeOf(cpsCopy)), cpsCopy);
 

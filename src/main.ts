@@ -15,5 +15,5 @@ console.log = (d: any) => {
 const snapshots = DataGenerator.generateLinearData(96);
 const cps: CyberPhysicalSystem = RoomTemperatureApproach.make(snapshots, 20, 12, 40, 10);
 
-const rl = new ReinforcementLearning(1, 150, 2);
+const rl = new ReinforcementLearning(1, 150, 150, 2);
 rl.train(cps);
