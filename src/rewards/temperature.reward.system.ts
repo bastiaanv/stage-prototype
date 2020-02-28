@@ -1,6 +1,11 @@
 import { RewardSystem } from './reward.system';
 import { FacilicomCoin } from './facilicom.coin';
 
+/*
+    When temperature is between 18 and 20 degrees, return a positive Facilicom coin (Comfort zone)
+    When temperature is between 16 and 20 degrees, return a neutral Facilicom coin (Tolerance zone)
+    When temperature is outside both, return a negative Facilicom coin (bad zone)
+*/
 export class TemperatureRewardSystem implements RewardSystem {
     getReward(temperature: number): FacilicomCoin {
         let value = 0;
