@@ -61,16 +61,29 @@ The lose function is the mean squared error method with the Gradient descent opt
         // Number of iterations
         const numEpisodes = 2000;
 
+        // Current state tensor
+        let inputTensor: Tensor | null = tensor([[0]]);
+        const stateTensor = variable(inputTensor);
+
+        // New state tensor
+        let inputNewTensor: Tensor | null = tensor([[0]]);
+        const newStateTensor = variable(inputNewTensor);
+
+        // New Q tensor
+        let QNewTensor: Tensor | null = tensor([0, 0]);
+        const newQTensor = variable(QNewTensor);
+
         for (let epoch = 0; epoch < numEpisodes; epoch++) {
             let wallet: FacilicomWallet | null = new FacilicomWallet();
             let cps: CyberPhysicalSystem | null = Object.assign( Object.create( Object.getPrototypeOf(cpsCopy)), cpsCopy);
 
             for (let batchNr = 0; batchNr < cps!.datasetSize; batchNr++) {
                 // Get q values from Neural Network
-                const state = tensor([[cps!.getCurrentTemp()]]);
+                inputTensor = tensor([[cps!.getCurrentTemp()]])
+                stateTensor.assign(inputTensor);
                 const modelOutcome = await Promise.all([
-                    this.model(state).data(),
-                    this.predict(state).data()
+                    this.model(stateTensor).data(),
+                    this.predict(stateTensor).data()
                 ]);
                 const currentQ = modelOutcome[0];
                 const actions = modelOutcome[1];
@@ -89,14 +102,21 @@ The lose function is the mean squared error method with the Gradient descent opt
                 wallet.add(coins);
 
                 // Get the new q values with the new state
-                const newInput = tensor([[cps!.getCurrentTemp()]]);
-                const newQ = await (this.model(newInput)).data();
+                inputNewTensor = tensor([[cps!.getCurrentTemp()]]);
+                newStateTensor.assign(inputNewTensor);
+                const newQ = await (this.model(newStateTensor)).data();
 
                 const maxNewQ = Math.max(...this.float32ArrayToArray(newQ));
                 currentQ[actions[0]] = wallet.getLastValue() + y * maxNewQ;
 
                 // Train the model based on new Q values and current state
-                this.trainModel(tensor(currentQ), state);
+                QNewTensor = tensor(currentQ);
+                newQTensor.assign(QNewTensor);
+                this.trainModel(tensor(currentQ), stateTensor);
+
+                inputTensor = null;
+                inputNewTensor = null;
+                QNewTensor = null;
             }
 
             // Decrease chance on a random action as we progress in learning
