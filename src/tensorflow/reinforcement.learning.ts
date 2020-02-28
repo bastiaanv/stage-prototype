@@ -28,7 +28,7 @@ export class ReinforcementLearning {
         const optimizer = train.sgd(0.5);
         optimizer.minimize(() => {
             const loss = sum(square(sub(newQ, this.model(input)))) as Scalar;
-            loss.print();
+            // loss.print();
             return loss;
         });
     }
@@ -62,12 +62,12 @@ The lose function is the mean squared error method with the Gradient descent opt
         const numEpisodes = 2000;
 
         for (let epoch = 0; epoch < numEpisodes; epoch++) {
-            const wallet = new FacilicomWallet();
-            const cps = Object.assign( Object.create( Object.getPrototypeOf(cpsCopy)), cpsCopy);
+            let wallet: FacilicomWallet | null = new FacilicomWallet();
+            let cps: CyberPhysicalSystem | null = Object.assign( Object.create( Object.getPrototypeOf(cpsCopy)), cpsCopy);
 
-            for (let batchNr = 0; batchNr < cps.datasetSize; batchNr++) {
+            for (let batchNr = 0; batchNr < cps!.datasetSize; batchNr++) {
                 // Get q values from Neural Network
-                const state = tensor([[cps.getCurrentTemp()]]);
+                const state = tensor([[cps!.getCurrentTemp()]]);
                 const modelOutcome = await Promise.all([
                     this.model(state).data(),
                     this.predict(state).data()
@@ -77,18 +77,19 @@ The lose function is the mean squared error method with the Gradient descent opt
 
                 // If true, then perform random action
                 if (Math.random() < e) {
+                    // console.log('random action')
                     actions[0] = Math.round(Math.random() * currentQ.length);
                 }
 
                 // Take action
-                cps.step(this.actionToActionArray(actions[0], currentQ.length));
+                cps!.step(this.actionToActionArray(actions[0], currentQ.length));
 
                 // Get and save reward (Facilicom coins) to Facilicom wallet
-                const coins: FacilicomCoin[] = cps.getReward();
+                const coins: FacilicomCoin[] = cps!.getReward();
                 wallet.add(coins);
 
                 // Get the new q values with the new state
-                const newInput = tensor([[cps.getCurrentTemp()]]);
+                const newInput = tensor([[cps!.getCurrentTemp()]]);
                 const newQ = await (this.model(newInput)).data();
 
                 const maxNewQ = Math.max(...this.float32ArrayToArray(newQ));
@@ -101,6 +102,10 @@ The lose function is the mean squared error method with the Gradient descent opt
             // Decrease chance on a random action as we progress in learning
             e = 1/( ( epoch/50 ) + 10 );
             console.log(`Facilicom points gained during epoch ${epoch}: ${wallet.getTotalValue()}`);
+
+            // Expose the wallet and CPS to the garbage collector
+            wallet = null;
+            cps = null;
         }
     }
 

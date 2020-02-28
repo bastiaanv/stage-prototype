@@ -49,6 +49,9 @@ export class RoomTemperatureApproach implements CyberPhysicalSystem {
         const actionHeating = actions[0];
         const actionCooling = actions[1];
 
+        // console.log(`Current temp: ${this.currentTemp}`)
+        // console.log(`Heating: ${actionHeating}, Cooling: ${actionCooling}`)
+
         this.currentTemp =  this.calculatePassiveCooling() +
                             this.calculateActiveHeating(actionHeating) +
                             this.calculateActiveCooling(actionCooling);

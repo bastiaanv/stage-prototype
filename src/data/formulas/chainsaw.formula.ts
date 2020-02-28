@@ -12,6 +12,18 @@ export class Chainsaw implements Formula {
     private needCooling = false;
     private previousValue = 0;
 
+/* formula form:
+
+24  |               /\                 /
+    |              /  \               /
+    |             /    \             /
+20  |_           /      \           /
+    | -_        /        -_        /
+    |   -_     /           -_     /
+    |     -_  /              -_  /
+18  |_______-__________________-________
+*/
+
     constructor(deltaPassiveCooling: number, deltaActiveHeating: number, deltaActiveCooling: number, maxValue: number, minValue: number, initValue: number) {
         this.deltaPassiveCooling = deltaPassiveCooling;
         this.deltaActiveHeating = deltaActiveHeating;
