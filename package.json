@@ -4,9 +4,7 @@
   "description": "",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "ts-node src/main.ts",
-    "start:node": "node --expose-gc --inspect dist/main.js",
-    "build": "tsc"
+    "start": "ts-node src/main.ts"
   },
   "repository": {
     "type": "git",
