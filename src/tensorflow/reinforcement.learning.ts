@@ -1,7 +1,8 @@
 import { CyberPhysicalSystem } from '../cps/cyber.physical.system.interface';
 import { FacilicomWallet } from '../rewards/facilicom.wallet';
-import { Tensor, variable, randomNormal, Variable, tensor, backend_util, square, sub, sum, train, Scalar } from '@tensorflow/tfjs-node';
+import { Tensor, variable, randomNormal, Variable, tensor, backend_util, square, sub, sum, train, Scalar, memory, setBackend } from '@tensorflow/tfjs-node';
 import { FacilicomCoin } from '../rewards/facilicom.coin';
+import * as tf from '@tensorflow/tfjs-node';
 
 export class ReinforcementLearning {
 
@@ -24,13 +25,8 @@ export class ReinforcementLearning {
     }
 
     // Train the model using the new Q values and current state
-    private trainModel(newQ: Tensor, input: Tensor): void {
-        const optimizer = train.sgd(0.5);
-        optimizer.minimize(() => {
-            const loss = sum(square(sub(newQ, this.model(input)))) as Scalar;
-            // loss.print();
-            return loss;
-        });
+    private trainModel(newQ: Tensor, input: Tensor): Scalar | null {
+        return train.sgd(0.1).minimize(() => sum(square(sub(newQ, this.model(input)))));
     }
 
 /*
@@ -52,6 +48,7 @@ The lose function is the mean squared error method with the Gradient descent opt
     }
 
     public async train(cpsCopy: CyberPhysicalSystem) {
+        await setBackend('cpu');
         // Discount
         const y = .99;
 
@@ -62,15 +59,18 @@ The lose function is the mean squared error method with the Gradient descent opt
         const numEpisodes = 2000;
 
         for (let epoch = 0; epoch < numEpisodes; epoch++) {
-            let wallet: FacilicomWallet | null = new FacilicomWallet();
-            let cps: CyberPhysicalSystem | null = Object.assign( Object.create( Object.getPrototypeOf(cpsCopy)), cpsCopy);
+            const wallet = new FacilicomWallet();
+            const cps  = Object.assign( Object.create( Object.getPrototypeOf(cpsCopy)), cpsCopy);
 
-            for (let batchNr = 0; batchNr < cps!.datasetSize; batchNr++) {
+            for (let batchNr = 0; batchNr < cps.datasetSize; batchNr++) {
                 // Get q values from Neural Network
-                const state = tensor([[cps!.getCurrentTemp()]]);
+                const currentTemp: number = cps.getCurrentTemp();
+                const modelTensor = tf.tidy(() => this.model(tensor([[currentTemp]])));
+                const predictTensor = tf.tidy(() => this.predict(tensor([[currentTemp]])));
+
                 const modelOutcome = await Promise.all([
-                    this.model(state).data(),
-                    this.predict(state).data()
+                    modelTensor.data(),
+                    predictTensor.data(),
                 ]);
                 const currentQ = modelOutcome[0];
                 const actions = modelOutcome[1];
@@ -82,30 +82,32 @@ The lose function is the mean squared error method with the Gradient descent opt
                 }
 
                 // Take action
-                cps!.step(this.actionToActionArray(actions[0], currentQ.length));
+                cps.step(this.actionToActionArray(actions[0], currentQ.length));
 
                 // Get and save reward (Facilicom coins) to Facilicom wallet
-                const coins: FacilicomCoin[] = cps!.getReward();
+                const coins: FacilicomCoin[] = cps.getReward();
                 wallet.add(coins);
 
                 // Get the new q values with the new state
-                const newInput = tensor([[cps!.getCurrentTemp()]]);
-                const newQ = await (this.model(newInput)).data();
+                const newQTensor = tf.tidy(() => this.model(tensor([[cps.getCurrentTemp()]])));
+                const newQ = await newQTensor.data();
 
                 const maxNewQ = Math.max(...this.float32ArrayToArray(newQ));
                 currentQ[actions[0]] = wallet.getLastValue() + y * maxNewQ;
 
                 // Train the model based on new Q values and current state
-                this.trainModel(tensor(currentQ), state);
+                tf.tidy(() => this.trainModel(tensor(currentQ), tensor([[currentTemp]])) as Scalar);
+
+                modelTensor.dispose();
+                predictTensor.dispose();
+                newQTensor.dispose();
+
+                console.log(tf.memory())
             }
 
             // Decrease chance on a random action as we progress in learning
             e = 1/( ( epoch/50 ) + 10 );
             console.log(`Facilicom points gained during epoch ${epoch}: ${wallet.getTotalValue()}`);
-
-            // Expose the wallet and CPS to the garbage collector
-            wallet = null;
-            cps = null;
         }
     }
 
