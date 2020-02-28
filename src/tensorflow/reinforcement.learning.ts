@@ -1,6 +1,6 @@
 import { CyberPhysicalSystem } from '../cps/cyber.physical.system.interface';
 import { FacilicomWallet } from '../rewards/facilicom.wallet';
-import { Tensor, variable, randomNormal, Variable, tensor, backend_util, square, sub, sum, train, Scalar, memory, setBackend } from '@tensorflow/tfjs-node';
+import { Tensor, variable, randomNormal, Variable, tensor, backend_util, square, sub, sum, train, Scalar, tidy, setBackend } from '@tensorflow/tfjs-node';
 import { FacilicomCoin } from '../rewards/facilicom.coin';
 import * as tf from '@tensorflow/tfjs-node';
 
@@ -14,6 +14,8 @@ export class ReinforcementLearning {
     private readonly weights3: Variable;
     private readonly bias3: Variable;
 
+    private readonly optimizer = train.sgd(0.1);
+
     // The neural network
     private model(x: Tensor): Tensor {
         return x.matMul(this.weights1).add(this.bias1).relu().matMul(this.weights2).add(this.bias2).relu().matMul(this.weights3).add(this.bias3);
@@ -25,8 +27,8 @@ export class ReinforcementLearning {
     }
 
     // Train the model using the new Q values and current state
-    private trainModel(newQ: Tensor, input: Tensor): Scalar | null {
-        return train.sgd(0.1).minimize(() => sum(square(sub(newQ, this.model(input)))));
+    private trainModel(newQ: Tensor, input: Tensor): Scalar {
+        return this.optimizer.minimize(() => sum(square(sub(newQ, tidy(() => this.model(input)))))) as Scalar;
     }
 
 /*
@@ -48,7 +50,6 @@ The lose function is the mean squared error method with the Gradient descent opt
     }
 
     public async train(cpsCopy: CyberPhysicalSystem) {
-        await setBackend('cpu');
         // Discount
         const y = .99;
 
@@ -65,8 +66,8 @@ The lose function is the mean squared error method with the Gradient descent opt
             for (let batchNr = 0; batchNr < cps.datasetSize; batchNr++) {
                 // Get q values from Neural Network
                 const currentTemp: number = cps.getCurrentTemp();
-                const modelTensor = tf.tidy(() => this.model(tensor([[currentTemp]])));
-                const predictTensor = tf.tidy(() => this.predict(tensor([[currentTemp]])));
+                const modelTensor = tidy(() => this.model(tensor([[currentTemp]])));
+                const predictTensor = tidy(() => this.predict(tensor([[currentTemp]])));
 
                 const modelOutcome = await Promise.all([
                     modelTensor.data(),
@@ -77,7 +78,6 @@ The lose function is the mean squared error method with the Gradient descent opt
 
                 // If true, then perform random action
                 if (Math.random() < e) {
-                    // console.log('random action')
                     actions[0] = Math.round(Math.random() * currentQ.length);
                 }
 
@@ -89,15 +89,16 @@ The lose function is the mean squared error method with the Gradient descent opt
                 wallet.add(coins);
 
                 // Get the new q values with the new state
-                const newQTensor = tf.tidy(() => this.model(tensor([[cps.getCurrentTemp()]])));
+                const newQTensor = tidy(() => this.model(tensor([[cps.getCurrentTemp()]])));
                 const newQ = await newQTensor.data();
 
                 const maxNewQ = Math.max(...this.float32ArrayToArray(newQ));
                 currentQ[actions[0]] = wallet.getLastValue() + y * maxNewQ;
 
                 // Train the model based on new Q values and current state
-                tf.tidy(() => this.trainModel(tensor(currentQ), tensor([[currentTemp]])) as Scalar);
+                tidy(() => this.trainModel(tensor(currentQ), tensor([[currentTemp]])));
 
+                // Cleanup tensors
                 modelTensor.dispose();
                 predictTensor.dispose();
                 newQTensor.dispose();
