@@ -2,7 +2,6 @@ import { CyberPhysicalSystem } from '../cps/cyber.physical.system.interface';
 import { FacilicomWallet } from '../rewards/facilicom.wallet';
 import { Tensor, variable, randomNormal, Variable, tensor, backend_util, square, sub, sum, train, Scalar, tidy, setBackend } from '@tensorflow/tfjs-node';
 import { FacilicomCoin } from '../rewards/facilicom.coin';
-import * as tf from '@tensorflow/tfjs-node';
 
 export class ReinforcementLearning {
 
@@ -102,8 +101,6 @@ The lose function is the mean squared error method with the Gradient descent opt
                 modelTensor.dispose();
                 predictTensor.dispose();
                 newQTensor.dispose();
-
-                console.log(tf.memory())
             }
 
             // Decrease chance on a random action as we progress in learning
