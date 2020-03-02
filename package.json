@@ -39,7 +39,9 @@
     "all": true,
     "exclude": [
       "src/main.ts",
-      "src/tensorflow/*"
+      "src/tensorflow/*",
+      "src/models/*",
+      "test/*"
     ]
   }
 }
