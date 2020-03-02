@@ -1,4 +1,4 @@
-name: Node.js CI
+name: Test project
 
 on: [push]
 
@@ -26,3 +26,5 @@ jobs:
 
     - name: Push coverage report to Coveralls
       uses: coverallsapp/github-action@v1.0.1
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
