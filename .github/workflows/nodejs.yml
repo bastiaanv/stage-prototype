@@ -20,8 +20,6 @@ jobs:
         node-version: ${{ matrix.node-version }}
 
     - name: Build & test project and push coverage to Coveralls
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
       run: |
         npm install
         npm run test
