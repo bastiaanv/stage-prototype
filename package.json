@@ -36,6 +36,10 @@
   },
   "nyc": {
     "extends": "@istanbuljs/nyc-config-typescript",
-    "all": true
+    "all": true,
+    "exclude": [
+      "src/main.ts",
+      "src/tensorflow/*"
+    ]
   }
 }
