@@ -1,6 +1,6 @@
 # How to run this project
 
-[![Coverage Status](https://coveralls.io/repos/github/federation-purple-study-associations/fpsa-api/badge.svg?branch=master)](https://coveralls.io/github/federation-purple-study-associations/fpsa-api?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/bastiaanv/stage-prototype/badge.svg?branch=master)](https://coveralls.io/github/bastiaanv/stage-prototype?branch=master)
 
 ## Requirements:
 - NodeJS > v10.12
