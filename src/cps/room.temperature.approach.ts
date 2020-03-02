@@ -1,26 +1,27 @@
 import { Snapshot } from '../models/snapshot.model';
 import { Trainer } from './trainer';
 import { CyberPhysicalSystem } from './cyber.physical.system.interface';
-import { RewardSystem } from '../rewards/reward.system';
+import { RewardSystem } from '../rewards/reward.system.interface';
 import { TemperatureRewardSystem } from '../rewards/temperature.reward.system';
 import { FacilicomCoin } from '../rewards/facilicom.coin';
 
+// Formula: Tdot = T - a + Uh * (Tdh + a) + Uc * (Tdc + a)
 export class RoomTemperatureApproach implements CyberPhysicalSystem {
-    private readonly deltaPasiveCooling: number;
-    private readonly deltaActiveHeating: number;
-    private readonly deltaActiveCooling: number;
-    private readonly heatingTemperature: number;
-    private readonly coolingTemperature: number;
-    private readonly outsideTemp: number;
+    private readonly deltaPasiveCooling:    number; // a
+    private readonly deltaActiveHeating:    number; // Tdh
+    private readonly deltaActiveCooling:    number; // Tdc
+    private readonly heatingTemperature:    number; // Tmaxh
+    private readonly coolingTemperature:    number; // Tminc
+    private readonly outsideTemp:           number; // Tminp
 
-    private readonly rewardSystems: RewardSystem[];
+    private readonly rewardSystems:         RewardSystem[];
 
-    private currentTemp: number;
-    public getCurrentTemp(): number {
+    private currentTemp:                    number; // T
+    public getCurrentTemp():                number {
         return this.currentTemp;
     }
 
-    public readonly datasetSize: number;
+    public readonly datasetSize:            number;
 
     private constructor(deltaPasiveCooling: number, outsideTemp: number, deltaActiveHeating: number, deltaActiveCooling: number, initTemp: number, heatingTemp: number, coolingTemp: number, datasetSize: number) {
         this.deltaPasiveCooling = deltaPasiveCooling;
@@ -46,11 +47,12 @@ export class RoomTemperatureApproach implements CyberPhysicalSystem {
     }
 
     public step(actions: number[]): void {
+        if (actions.length !== 2) {
+            throw new Error('Actions does not match nr of actions available');
+        }
+
         const actionHeating = actions[0];
         const actionCooling = actions[1];
-
-        // console.log(`Current temp: ${this.currentTemp}`)
-        // console.log(`Heating: ${actionHeating}, Cooling: ${actionCooling}`)
 
         this.currentTemp =  this.calculatePassiveCooling() +
                             this.calculateActiveHeating(actionHeating) +
@@ -70,9 +72,9 @@ export class RoomTemperatureApproach implements CyberPhysicalSystem {
     public getReward(): FacilicomCoin[] {
         const reward: FacilicomCoin[] = [];
         for (const system of this.rewardSystems) {
-            if (system instanceof TemperatureRewardSystem) {
-                reward.push(system.getReward(this.getCurrentTemp()));
-            }
+            // if (system instanceof TemperatureRewardSystem) {
+            reward.push(system.getReward(this.getCurrentTemp()));
+            // }
         }
 
         return reward;

@@ -1,4 +1,4 @@
-import { RewardSystem } from './reward.system';
+import { RewardSystem } from './reward.system.interface';
 import { FacilicomCoin } from './facilicom.coin';
 
 /*

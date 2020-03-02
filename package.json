@@ -6,7 +6,7 @@
     "start": "ts-node src/main.ts",
     "start:node": "node --inspect dist/main.js",
     "build": "tsc",
-    "test": "nyc --reporter=lcov mocha --require ts-node/register test/**/*.spec.ts"
+    "test": "nyc --reporter=lcov --reporter=text mocha --require ts-node/register test/**/*.spec.ts --reporter=nyan"
   },
   "repository": {
     "type": "git",
@@ -41,7 +41,10 @@
       "src/main.ts",
       "src/tensorflow/*",
       "src/models/*",
-      "test/*"
+      "src/**/*.interface.ts"
+    ],
+    "include": [
+      "src/*"
     ]
   }
 }
