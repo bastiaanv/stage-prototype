@@ -12,7 +12,7 @@ export class DataGenerator {
         time.setUTCHours(0, 0, 0, 0);
 
         // Chainsaw like formula is used for the linear data. The temp at 00:00 is 19.5 degree
-        const formula = new Chainsaw(0.05, 0.25, 0.3, 24, 18, 19.5);
+        const formula = new Chainsaw(0.05, 0.25, 0.3, 24, 18, 20, 19.5);
         for (let i = 0; i < countQuarters; i++) {
             output.push({
                 when: new Date(time.getTime()),

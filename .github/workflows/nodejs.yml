@@ -19,15 +19,12 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
 
-    - name: Build & test project and push coverage to Coveralls
+    - name: Build & test project
       run: |
         npm install
         npm run test
 
-    - name: Coveralls GitHub Action
+    - name: Push coverage results to Coveralls
       uses: coverallsapp/github-action@v1.0.1
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
-      
-
-      

@@ -1,15 +1,15 @@
 import { Formula } from './formula.interface';
 
 export class Chainsaw implements Formula {
-    private readonly deltaPassiveCooling: number;
-    private readonly deltaActiveHeating: number;
-    private readonly deltaActiveCooling: number;
-    private readonly maxValue: number;
-    private readonly midValue: number;
-    private readonly minValue: number;
+    private readonly deltaPassiveCooling:   number;
+    private readonly deltaActiveHeating:    number;
+    private readonly deltaActiveCooling:    number;
+    private readonly maxValue:              number;
+    private readonly midValue:              number;
+    private readonly minValue:              number;
+    private needHeating:                    boolean;
+    private needCooling:                    boolean;
 
-    private needHeating = false;
-    private needCooling = false;
     private previousValue = 0;
 
 /* formula form:
@@ -24,13 +24,15 @@ export class Chainsaw implements Formula {
 18  |_______-__________________-________
 */
 
-    constructor(deltaPassiveCooling: number, deltaActiveHeating: number, deltaActiveCooling: number, maxValue: number, minValue: number, initValue: number) {
+    constructor(deltaPassiveCooling: number, deltaActiveHeating: number, deltaActiveCooling: number, maxValue: number, minValue: number, midValue: number, initValue: number, needHeating = false, needCooling = false) {
         this.deltaPassiveCooling = deltaPassiveCooling;
         this.deltaActiveHeating = deltaActiveHeating;
         this.deltaActiveCooling = deltaActiveCooling;
         this.maxValue = maxValue;
-        this.midValue = initValue;
+        this.midValue = midValue;
         this.minValue = minValue;
+        this.needHeating = needHeating;
+        this.needCooling = needCooling;
 
         this.previousValue = initValue;
     }
