@@ -6,8 +6,7 @@
     "start": "ts-node src/main.ts",
     "start:node": "node --inspect dist/main.js",
     "build": "tsc",
-    "test": "nyc mocha --require ts-node/register test/**/*.spec.ts && nyc report --reporter=text-lcov",
-    "test:ci": "nyc mocha --require ts-node/register test/**/*.spec.ts && nyc report --reporter=text-lcov | coveralls"
+    "test": "nyc --reporter=lcov mocha --require ts-node/register test/**/*.spec.ts"
   },
   "repository": {
     "type": "git",

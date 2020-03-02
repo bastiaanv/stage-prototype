@@ -4,4 +4,4 @@ debug.log
 dist/*
 .vscode/*
 .nyc_output/*
-coverage/8
+coverage/*
