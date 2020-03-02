@@ -1,6 +1,6 @@
 name: Test project
 
-on: [push]
+on: [push, "pull_request"]
 
 jobs:
   build:
@@ -19,12 +19,11 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
 
-    - name: Build and test project
+    - name: Build & test project and push coverage to Coveralls
       run: |
         npm install
         npm run test:ci
-
-    - name: Push coverage report to Coveralls
-      uses: coverallsapp/github-action@v1.0.1
       with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      
