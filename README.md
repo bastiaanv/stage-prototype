@@ -1,6 +1,7 @@
 # How to run this project
 
 [![Coverage Status](https://coveralls.io/repos/github/bastiaanv/stage-prototype/badge.svg?branch=master)](https://coveralls.io/github/bastiaanv/stage-prototype?branch=master)
+![](https://github.com/bastiaanv/stage-prototype/workflows/Test%20project/badge.svg)
 
 ## Requirements:
 - NodeJS > v10.12
