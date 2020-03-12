@@ -25,6 +25,7 @@
     "@istanbuljs/nyc-config-typescript": "^1.0.1",
     "@types/chai": "^4.2.9",
     "@types/mocha": "^7.0.1",
+    "@types/node": "^13.9.0",
     "chai": "^4.2.0",
     "coveralls": "^3.0.9",
     "i": "^0.3.6",

@@ -50,7 +50,7 @@ The lose function is the mean squared error method with the Gradient descent opt
 
     public async train(cpsCopy: CyberPhysicalSystem) {
         // Discount
-        const y = .99;
+        const y = .6;
 
         // Chance on random action
         let e = 0.1;
@@ -92,6 +92,8 @@ The lose function is the mean squared error method with the Gradient descent opt
                 const newQ = await newQTensor.data();
 
                 const maxNewQ = Math.max(...this.float32ArrayToArray(newQ));
+                console.log(currentQ)
+                console.log(maxNewQ)
                 currentQ[actions[0]] = wallet.getLastValue() + y * maxNewQ;
 
                 // Train the model based on new Q values and current state
