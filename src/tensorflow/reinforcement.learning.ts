@@ -59,7 +59,7 @@ The lose function is the mean squared error method with the Gradient descent opt
         let e = 0.1;
 
         // Number of iterations
-        const numEpisodes = 2;
+        const numEpisodes = 20000;
 
         for (let epoch = 0; epoch < numEpisodes; epoch++) {
             const wallet = new FacilicomWallet();
