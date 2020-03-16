@@ -23,3 +23,6 @@ const cps: CyberPhysicalSystem = RoomTemperatureApproach.make(snapshots, 20, 12,
 // Create the reinforcement learning model and train it
 const rl = new ReinforcementLearning(1, 100, 100, 3);
 rl.train(cps);
+
+// Save model when done training
+rl.saveToFile();
