@@ -26,8 +26,8 @@ export class ReinforcementLearning {
     }
 
     // Train the model using the new Q values and current state
-    private trainModel(newQ: Tensor, input: Tensor): Scalar {
-        return this.optimizer.minimize(() => losses.meanSquaredError(newQ, this.model(input))) as Scalar;
+    private trainModel(targetQ: Tensor, q: Tensor): Scalar {
+        return this.optimizer.minimize(() => losses.meanSquaredError(targetQ, q)) as Scalar;
     }
 
 /*
@@ -92,10 +92,12 @@ The lose function is the mean squared error method with the Gradient descent opt
                 const newQ = await newQTensor.data();
 
                 const maxNewQ = Math.max(...this.float32ArrayToArray(newQ));
-                currentQ[actions[0]] = wallet.getLastValue() + y * maxNewQ;
+                const targetQ = new Float32Array();
+                targetQ.set(currentQ);
+                targetQ[actions[0]] = wallet.getLastValue() + y * maxNewQ;
 
                 // Train the model based on new Q values and current state
-                tidy(() => this.trainModel(tensor(currentQ).reshape([1,2]), tensor([[currentTemp]])));
+                tidy(() => this.trainModel(tensor(targetQ), tensor(currentQ)));
 
                 // Cleanup tensors to prevent memory leak
                 qsa.dispose();
