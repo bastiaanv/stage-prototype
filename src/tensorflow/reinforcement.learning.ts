@@ -65,11 +65,11 @@ The lose function is the mean squared error method with the Gradient descent opt
             for (let batchNr = 0; batchNr < cps.datasetSize; batchNr++) {
                 // Get q values from Neural Network
                 const currentTemp: number = cps.getCurrentTemp();
-                const modelTensor = tidy(() => this.model(tensor([[currentTemp]])));
+                const qsa = tidy(() => this.model(tensor([[currentTemp]])));
                 const predictTensor = tidy(() => this.predict(tensor([[currentTemp]])));
 
                 const modelOutcome = await Promise.all([
-                    modelTensor.data(),
+                    qsa.data(),
                     predictTensor.data(),
                 ]);
                 const currentQ = modelOutcome[0];
@@ -92,15 +92,13 @@ The lose function is the mean squared error method with the Gradient descent opt
                 const newQ = await newQTensor.data();
 
                 const maxNewQ = Math.max(...this.float32ArrayToArray(newQ));
-                // console.log(currentQ)
-                // console.log(maxNewQ)
                 currentQ[actions[0]] = wallet.getLastValue() + y * maxNewQ;
 
                 // Train the model based on new Q values and current state
                 tidy(() => this.trainModel(tensor(currentQ).reshape([1,2]), tensor([[currentTemp]])));
 
                 // Cleanup tensors to prevent memory leak
-                modelTensor.dispose();
+                qsa.dispose();
                 predictTensor.dispose();
                 newQTensor.dispose();
             }
