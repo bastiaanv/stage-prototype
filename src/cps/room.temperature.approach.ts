@@ -47,12 +47,12 @@ export class RoomTemperatureApproach implements CyberPhysicalSystem {
     }
 
     public step(actions: number[]): void {
-        if (actions.length !== 2) {
+        if (actions.length !== 3) {
             throw new Error('Actions does not match nr of actions available');
         }
 
-        const actionHeating = actions[0];
-        const actionCooling = actions[1];
+        const actionHeating = actions[1];
+        const actionCooling = actions[2];
 
         this.currentTemp =  this.calculatePassiveCooling() +
                             this.calculateActiveHeating(actionHeating) +

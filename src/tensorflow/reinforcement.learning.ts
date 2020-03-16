@@ -5,6 +5,13 @@ import { FacilicomCoin } from '../rewards/facilicom.coin';
 
 export class ReinforcementLearning {
 
+    private readonly accuracies: number[] = [];
+
+    // Hyper parameters
+    private readonly discount = 0.6;
+    private readonly learningRate = 0.5;
+    private readonly numEpochs = 20000;
+
     // Neural network matrixes
     private readonly weights1: Variable;
     private readonly bias1: Variable;
@@ -13,7 +20,7 @@ export class ReinforcementLearning {
     private readonly weights3: Variable;
     private readonly bias3: Variable;
 
-    private readonly optimizer = train.sgd(0.1);
+    private readonly optimizer = train.sgd(this.learningRate);
 
     // The neural network
     private model(x: Tensor): Tensor {
@@ -26,8 +33,11 @@ export class ReinforcementLearning {
     }
 
     // Train the model using the new Q values and current state
-    private trainModel(newQ: Tensor, input: Tensor): Scalar {
-        return this.optimizer.minimize(() => losses.meanSquaredError(newQ, this.model(input))) as Scalar;
+    private trainModel(targetQ: Tensor, input: Tensor): Scalar {
+        return this.optimizer.minimize(() => {
+            // losses.meanSquaredError(targetQ, this.model(input)).print();
+            return losses.meanSquaredError(targetQ, this.model(input))
+        }) as Scalar;
     }
 
 /*
@@ -35,7 +45,7 @@ Neural network model:
         Input                   Hidden layer 1                  Hidden layer 2                      Output
     (countInput neurons) ->   (countHiddenLayer1 neurons)  ->  (countHiddenLayer2 neurons)   ->  (countOutput neuron)
 
-This model is trained via a reinforcement learning algorithm and uses the relu activation function.
+This model is trained via a reinforcement learning algorithm and uses the softmax activation function.
 The lose function is the mean squared error method with the Gradient descent optimizer as our learning partner.
 */
 
@@ -49,27 +59,21 @@ The lose function is the mean squared error method with the Gradient descent opt
     }
 
     public async train(cpsCopy: CyberPhysicalSystem) {
-        // Discount
-        const y = .6;
-
         // Chance on random action
         let e = 0.1;
 
-        // Number of iterations
-        const numEpisodes = 2000;
-
-        for (let epoch = 0; epoch < numEpisodes; epoch++) {
+        for (let epoch = 0; epoch < this.numEpochs; epoch++) {
             const wallet = new FacilicomWallet();
-            const cps  = Object.assign( Object.create( Object.getPrototypeOf(cpsCopy)), cpsCopy);
+            const cps: CyberPhysicalSystem = Object.assign( Object.create( Object.getPrototypeOf(cpsCopy)), cpsCopy);
 
             for (let batchNr = 0; batchNr < cps.datasetSize; batchNr++) {
                 // Get q values from Neural Network
                 const currentTemp: number = cps.getCurrentTemp();
-                const modelTensor = tidy(() => this.model(tensor([[currentTemp]])));
+                const qsa = tidy(() => this.model(tensor([[currentTemp]])));
                 const predictTensor = tidy(() => this.predict(tensor([[currentTemp]])));
 
                 const modelOutcome = await Promise.all([
-                    modelTensor.data(),
+                    qsa.data(),
                     predictTensor.data(),
                 ]);
                 const currentQ = modelOutcome[0];
@@ -92,22 +96,23 @@ The lose function is the mean squared error method with the Gradient descent opt
                 const newQ = await newQTensor.data();
 
                 const maxNewQ = Math.max(...this.float32ArrayToArray(newQ));
-                // console.log(currentQ)
-                // console.log(maxNewQ)
-                currentQ[actions[0]] = wallet.getLastValue() + y * maxNewQ;
+                currentQ[actions[0]] = wallet.getLastValue() + this.discount * maxNewQ;
 
                 // Train the model based on new Q values and current state
-                tidy(() => this.trainModel(tensor(currentQ).reshape([1,2]), tensor([[currentTemp]])));
+                tidy(() => this.trainModel(tensor([currentQ]), tensor([[currentTemp]])));
 
                 // Cleanup tensors to prevent memory leak
-                modelTensor.dispose();
+                qsa.dispose();
                 predictTensor.dispose();
                 newQTensor.dispose();
             }
 
             // Decrease chance on a random action as we progress in learning
             e = 1/( ( epoch/50 ) + 10 );
-            console.log(`Facilicom coins gained during epoch ${epoch}: ${wallet.getTotalValue()}`);
+            // console.log(`Facilicom coins gained during epoch ${epoch}: ${wallet.getTotalValue()}`);
+            // console.log(`Accuracy during epoch ${epoch}: ${(wallet.getTotalValue()/cps.datasetSize *100).toFixed(1)}`);
+            this.accuracies.push(wallet.getTotalValue() / cps.datasetSize * 100);
+            console.log(`Average accuracy after ${epoch} epochs: ${(this.accuracies.reduce((a, b) => a+ b)/this.accuracies.length).toFixed(1)}`);
         }
     }
 
