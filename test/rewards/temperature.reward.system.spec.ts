@@ -9,7 +9,7 @@ describe('Temperature Reward System', () => {
             const trs = new TemperatureRewardSystem();
             const temperature = 19;
 
-            const expected = new FacilicomCoin(1);
+            const expected = new FacilicomCoin(2);
             const actual: FacilicomCoin = trs.getReward(temperature);
 
             expect(expected).to.deep.equal(actual);
@@ -29,7 +29,7 @@ describe('Temperature Reward System', () => {
             const trs = new TemperatureRewardSystem();
             const temperature = 15;
 
-            const expected = new FacilicomCoin(-1);
+            const expected = new FacilicomCoin(-2);
             const actual: FacilicomCoin = trs.getReward(temperature);
 
             expect(expected).to.deep.equal(actual);
@@ -39,7 +39,7 @@ describe('Temperature Reward System', () => {
             const trs = new TemperatureRewardSystem();
             const temperature = 21;
 
-            const expected = new FacilicomCoin(-1);
+            const expected = new FacilicomCoin(-2);
             const actual: FacilicomCoin = trs.getReward(temperature);
 
             expect(expected).to.deep.equal(actual);
