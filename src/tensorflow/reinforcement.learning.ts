@@ -108,8 +108,8 @@ The lose function is the mean squared error method with the Gradient descent opt
 
             // Decrease chance on a random action as we progress in learning
             e = 1/( ( epoch/50 ) + 10 );
-            console.log(`Facilicom coins gained during epoch ${epoch}: ${wallet.getTotalValue()}`);
-            console.log(`Accuracy during epoch ${epoch}: ${wallet.getTotalValue()/cps.datasetSize}`);
+            // console.log(`Facilicom coins gained during epoch ${epoch}: ${wallet.getTotalValue()}`);
+            console.log(`Accuracy during epoch ${epoch}: ${(wallet.getTotalValue()/cps.datasetSize *100).toFixed(1)}`);
         }
     }
 
