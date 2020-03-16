@@ -26,7 +26,7 @@ export class ReinforcementLearning {
     }
 
     // Train the model using the new Q values and current state
-    private trainModel(targetQ: Tensor, q: Tensor): Scalar {
+    private trainModel(targetQ: backend_util.TypedArray, q: backend_util.TypedArray): Scalar {
         return this.optimizer.minimize(() => losses.meanSquaredError(targetQ, q)) as Scalar;
     }
 
@@ -100,7 +100,7 @@ The lose function is the mean squared error method with the Gradient descent opt
                 console.log(currentQ);
 
                 // Train the model based on new Q values and current state
-                tidy(() => this.trainModel(tensor(targetQ), tensor(currentQ)));
+                tidy(() => this.trainModel(targetQ, currentQ));
 
                 // Cleanup tensors to prevent memory leak
                 qsa.dispose();
