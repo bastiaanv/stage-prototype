@@ -13,7 +13,7 @@ export class ReinforcementLearning {
     private readonly weights3: Variable;
     private readonly bias3: Variable;
 
-    private readonly optimizer = train.sgd(0.1);
+    private readonly optimizer = train.sgd(0.05);
 
     // The neural network
     private model(x: Tensor): Tensor {
