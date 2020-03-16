@@ -15,7 +15,7 @@ export class ReinforcementLearning {
     private readonly weights3: Variable;
     private readonly bias3: Variable;
 
-    private readonly optimizer = train.sgd(0.05);
+    private readonly optimizer = train.sgd(0.1);
 
     // The neural network
     private model(x: Tensor): Tensor {
@@ -112,7 +112,7 @@ The lose function is the mean squared error method with the Gradient descent opt
             e = 1/( ( epoch/50 ) + 10 );
             // console.log(`Facilicom coins gained during epoch ${epoch}: ${wallet.getTotalValue()}`);
             // console.log(`Accuracy during epoch ${epoch}: ${(wallet.getTotalValue()/cps.datasetSize *100).toFixed(1)}`);
-            this.accuracies.push(wallet.getTotalValue()/cps.datasetSize *100);
+            this.accuracies.push(wallet.getTotalValue() / cps.datasetSize * 100);
             console.log(`Average accuracy after ${epoch} epochs: ${(this.accuracies.reduce((a, b) => a+ b)/this.accuracies.length).toFixed(1)}`);
         }
     }
