@@ -20,7 +20,7 @@ describe('Room temperature approach', () => {
 
             const actual = cps.getReward();
             const expected: FacilicomCoin[] = [
-                new FacilicomCoin(2)
+                new FacilicomCoin(1)
             ];
 
             expect(actual).to.be.deep.equal(expected);
@@ -42,7 +42,7 @@ describe('Room temperature approach', () => {
 
             const actual = cps.getReward();
             const expected: FacilicomCoin[] = [
-                new FacilicomCoin(-2)
+                new FacilicomCoin(-1)
             ];
 
             expect(actual).to.be.deep.equal(expected);
