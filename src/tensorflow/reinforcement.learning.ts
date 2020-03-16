@@ -5,6 +5,8 @@ import { FacilicomCoin } from '../rewards/facilicom.coin';
 
 export class ReinforcementLearning {
 
+    private readonly accuracies: number[] = [];
+
     // Neural network matrixes
     private readonly weights1: Variable;
     private readonly bias1: Variable;
@@ -109,7 +111,9 @@ The lose function is the mean squared error method with the Gradient descent opt
             // Decrease chance on a random action as we progress in learning
             e = 1/( ( epoch/50 ) + 10 );
             // console.log(`Facilicom coins gained during epoch ${epoch}: ${wallet.getTotalValue()}`);
-            console.log(`Accuracy during epoch ${epoch}: ${(wallet.getTotalValue()/cps.datasetSize *100).toFixed(1)}`);
+            // console.log(`Accuracy during epoch ${epoch}: ${(wallet.getTotalValue()/cps.datasetSize *100).toFixed(1)}`);
+            this.accuracies.push(wallet.getTotalValue()/cps.datasetSize *100);
+            console.log(`Average accuracy after ${epoch} epochs: ${(this.accuracies.reduce((a, b) => a+ b)/this.accuracies.length).toFixed(1)}`);
         }
     }
 
