@@ -2,6 +2,7 @@ import { CyberPhysicalSystem } from '../cps/cyber.physical.system.interface';
 import { FacilicomWallet } from '../rewards/facilicom.wallet';
 import { Tensor, variable, randomNormal, Variable, tensor, backend_util, train, Scalar, tidy, losses } from '@tensorflow/tfjs-node';
 import { FacilicomCoin } from '../rewards/facilicom.coin';
+import { writeFile, readFileSync } from 'fs';
 
 export class ReinforcementLearning {
 
@@ -49,13 +50,25 @@ This model is trained via a reinforcement learning algorithm and uses the softma
 The lose function is the mean squared error method with the Gradient descent optimizer as our learning partner.
 */
 
-    constructor(countInput: number, countHiddenLayer1: number, countHiddenLayer2: number, countOutput: number) {
-        this.weights1 = variable(randomNormal([countInput, countHiddenLayer1]));
-        this.bias1 = variable(randomNormal([countHiddenLayer1]));
-        this.weights2 = variable(randomNormal([countHiddenLayer1, countHiddenLayer2]));
-        this.bias2 = variable(randomNormal([countHiddenLayer2]));
-        this.weights3 = variable(randomNormal([countHiddenLayer2, countOutput]));
-        this.bias3 = variable(randomNormal([countOutput]));
+    constructor(countInput: number, countHiddenLayer1: number, countHiddenLayer2: number, countOutput: number, loadFile: boolean = false) {
+        if (!loadFile) {
+            this.weights1 = variable(randomNormal([countInput, countHiddenLayer1]));
+            this.bias1 = variable(randomNormal([countHiddenLayer1]));
+            this.weights2 = variable(randomNormal([countHiddenLayer1, countHiddenLayer2]));
+            this.bias2 = variable(randomNormal([countHiddenLayer2]));
+            this.weights3 = variable(randomNormal([countHiddenLayer2, countOutput]));
+            this.bias3 = variable(randomNormal([countOutput]));
+
+        } else {
+            const modelJson: SavedModel = JSON.parse(readFileSync('model.json').toString());
+
+            this.weights1 = variable(tensor(modelJson.weights1));
+            this.bias1 = variable(tensor(modelJson.bias1));
+            this.weights2 = variable(tensor(modelJson.weights2));
+            this.bias2 = variable(tensor(modelJson.bias2));
+            this.weights3 = variable(tensor(modelJson.weights3));
+            this.bias3 = variable(tensor(modelJson.bias3));
+        }
     }
 
     public async train(cpsCopy: CyberPhysicalSystem) {
@@ -116,6 +129,32 @@ The lose function is the mean squared error method with the Gradient descent opt
         }
     }
 
+    public async saveToFile(): Promise<void> {
+        const data = await Promise.all([
+            this.weights1.data(),
+            this.bias1.data(),
+            this.weights2.data(),
+            this.bias2.data(),
+            this.weights3.data(),
+            this.bias3.data(),
+        ]);
+
+        const file: SavedModel = {
+            weights1: data[0] as Float32Array,
+            bias1: data[1] as Float32Array,
+            weights2: data[2] as Float32Array,
+            bias2: data[3] as Float32Array,
+            weights3: data[4] as Float32Array,
+            bias3: data[5] as Float32Array,
+        };
+
+        writeFile('model.json', file, (err?: any) => {
+            if (err) {
+                console.log(err);
+            }
+        });
+    }
+
     // Transform a float32array to a basic js array
     private float32ArrayToArray(array: backend_util.TypedArray): number[] {
         const output: number[] = [];
@@ -140,4 +179,13 @@ The lose function is the mean squared error method with the Gradient descent opt
 
         return output;
     }
+}
+
+interface SavedModel {
+    weights1: Float32Array;
+    bias1: Float32Array;
+    weights2: Float32Array;
+    bias2: Float32Array;
+    weights3: Float32Array;
+    bias3: Float32Array;
 }
