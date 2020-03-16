@@ -92,7 +92,7 @@ The lose function is the mean squared error method with the Gradient descent opt
                 const newQ = await newQTensor.data();
 
                 const maxNewQ = Math.max(...this.float32ArrayToArray(newQ));
-                const targetQ = new Float32Array();
+                const targetQ = new Float32Array(2);
                 targetQ.set(currentQ);
                 targetQ[actions[0]] = wallet.getLastValue() + y * maxNewQ;
 
