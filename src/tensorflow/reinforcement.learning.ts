@@ -95,12 +95,10 @@ The lose function is the mean squared error method with the Gradient descent opt
                 const newQ = await newQTensor.data();
 
                 const maxNewQ = Math.max(...this.float32ArrayToArray(newQ));
-                const targetQ = new Float32Array(2);
-                targetQ.set(currentQ);
-                targetQ[actions[0]] = wallet.getLastValue() + y * maxNewQ;
+                currentQ[actions[0]] = wallet.getLastValue() + y * maxNewQ;
 
                 // Train the model based on new Q values and current state
-                tidy(() => this.trainModel(tensor([targetQ]), tensor([[currentTemp]])));
+                tidy(() => this.trainModel(tensor([currentQ]), tensor([[currentTemp]])));
 
                 // Cleanup tensors to prevent memory leak
                 qsa.dispose();
