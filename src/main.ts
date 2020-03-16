@@ -21,5 +21,5 @@ const snapshots = DataGenerator.generateLinearData(96);
 const cps: CyberPhysicalSystem = RoomTemperatureApproach.make(snapshots, 20, 12, 40, 10);
 
 // Create the reinforcement learning model and train it
-const rl = new ReinforcementLearning(1, 5, 5, 2);
+const rl = new ReinforcementLearning(1, 10, 10, 2);
 rl.train(cps);

@@ -17,7 +17,7 @@ export class ReinforcementLearning {
 
     // The neural network
     private model(x: Tensor): Tensor {
-        return x.matMul(this.weights1).add(this.bias1).relu().matMul(this.weights2).add(this.bias2).relu().matMul(this.weights3).add(this.bias3);
+        return x.matMul(this.weights1).add(this.bias1).softmax().matMul(this.weights2).add(this.bias2).softmax().matMul(this.weights3).add(this.bias3);
     }
 
     // Use the model to get the index of the predicted action based on the given state
@@ -26,8 +26,11 @@ export class ReinforcementLearning {
     }
 
     // Train the model using the new Q values and current state
-    private trainModel(targetQ: backend_util.TypedArray, q: backend_util.TypedArray): Scalar {
-        return this.optimizer.minimize(() => losses.meanSquaredError(targetQ, q)) as Scalar;
+    private trainModel(targetQ: Tensor, input: Tensor): Scalar {
+        return this.optimizer.minimize(() => {
+            // losses.meanSquaredError(targetQ, this.model(input)).print();
+            return losses.meanSquaredError(targetQ, this.model(input))
+        }) as Scalar;
     }
 
 /*
@@ -35,7 +38,7 @@ Neural network model:
         Input                   Hidden layer 1                  Hidden layer 2                      Output
     (countInput neurons) ->   (countHiddenLayer1 neurons)  ->  (countHiddenLayer2 neurons)   ->  (countOutput neuron)
 
-This model is trained via a reinforcement learning algorithm and uses the relu activation function.
+This model is trained via a reinforcement learning algorithm and uses the softmax activation function.
 The lose function is the mean squared error method with the Gradient descent optimizer as our learning partner.
 */
 
@@ -56,7 +59,7 @@ The lose function is the mean squared error method with the Gradient descent opt
         let e = 0.1;
 
         // Number of iterations
-        const numEpisodes = 2000;
+        const numEpisodes = 2;
 
         for (let epoch = 0; epoch < numEpisodes; epoch++) {
             const wallet = new FacilicomWallet();
@@ -96,11 +99,8 @@ The lose function is the mean squared error method with the Gradient descent opt
                 targetQ.set(currentQ);
                 targetQ[actions[0]] = wallet.getLastValue() + y * maxNewQ;
 
-                console.log(targetQ);
-                console.log(currentQ);
-
                 // Train the model based on new Q values and current state
-                tidy(() => this.trainModel(targetQ, currentQ));
+                tidy(() => this.trainModel(tensor([targetQ]), tensor([[currentTemp]])));
 
                 // Cleanup tensors to prevent memory leak
                 qsa.dispose();
