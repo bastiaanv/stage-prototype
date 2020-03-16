@@ -7,6 +7,11 @@ export class ReinforcementLearning {
 
     private readonly accuracies: number[] = [];
 
+    // Hyper parameters
+    private readonly discount = 0.6;
+    private readonly learningRate = 0.5;
+    private readonly numEpochs = 20000;
+
     // Neural network matrixes
     private readonly weights1: Variable;
     private readonly bias1: Variable;
@@ -15,7 +20,7 @@ export class ReinforcementLearning {
     private readonly weights3: Variable;
     private readonly bias3: Variable;
 
-    private readonly optimizer = train.sgd(0.1);
+    private readonly optimizer = train.sgd(this.learningRate);
 
     // The neural network
     private model(x: Tensor): Tensor {
@@ -54,16 +59,10 @@ The lose function is the mean squared error method with the Gradient descent opt
     }
 
     public async train(cpsCopy: CyberPhysicalSystem) {
-        // Discount
-        const y = .6;
-
         // Chance on random action
         let e = 0.1;
 
-        // Number of iterations
-        const numEpisodes = 20000;
-
-        for (let epoch = 0; epoch < numEpisodes; epoch++) {
+        for (let epoch = 0; epoch < this.numEpochs; epoch++) {
             const wallet = new FacilicomWallet();
             const cps: CyberPhysicalSystem = Object.assign( Object.create( Object.getPrototypeOf(cpsCopy)), cpsCopy);
 
@@ -97,7 +96,7 @@ The lose function is the mean squared error method with the Gradient descent opt
                 const newQ = await newQTensor.data();
 
                 const maxNewQ = Math.max(...this.float32ArrayToArray(newQ));
-                currentQ[actions[0]] = wallet.getLastValue() + y * maxNewQ;
+                currentQ[actions[0]] = wallet.getLastValue() + this.discount * maxNewQ;
 
                 // Train the model based on new Q values and current state
                 tidy(() => this.trainModel(tensor([currentQ]), tensor([[currentTemp]])));
