@@ -87,7 +87,7 @@ describe('Room temperature approach', () => {
             ]
             const cps = RoomTemperatureApproach.make(snapshots, startTemp, 15, 40, 15);
 
-            cps.step([0,0]);
+            cps.step([1,0,0]);
             const actual = startTemp - cps.getCurrentTemp();
             const expected = 0.2;
 
@@ -124,7 +124,7 @@ describe('Room temperature approach', () => {
             ]
             const cps = RoomTemperatureApproach.make(snapshots, startTemp, 15, 40, 15);
 
-            cps.step([0,1]);
+            cps.step([0,0,1]);
             const actual = startTemp - cps.getCurrentTemp();
             const expected = 0.2;
 
@@ -161,7 +161,7 @@ describe('Room temperature approach', () => {
             ]
             const cps = RoomTemperatureApproach.make(snapshots, startTemp, 15, 40, 15);
 
-            cps.step([1,0]);
+            cps.step([0,1,0]);
             const actual = cps.getCurrentTemp() - startTemp;
             const expected = 0.2;
 
@@ -198,7 +198,7 @@ describe('Room temperature approach', () => {
             ]
             const cps = RoomTemperatureApproach.make(snapshots, startTemp, 0, 40, 0);
 
-            cps.step([1,0]);
+            cps.step([0,1,0]);
             const actual = cps.getCurrentTemp();
             const expected = 40;
 
@@ -235,7 +235,7 @@ describe('Room temperature approach', () => {
             ]
             const cps = RoomTemperatureApproach.make(snapshots, startTemp, 0, 0, 15);
 
-            cps.step([0,1]);
+            cps.step([0,0,1]);
             const actual = cps.getCurrentTemp();
             const expected = 15;
 
@@ -272,7 +272,7 @@ describe('Room temperature approach', () => {
             ]
             const cps = RoomTemperatureApproach.make(snapshots, startTemp, 15, 0, 0);
 
-            cps.step([0,0]);
+            cps.step([1,0,0]);
             const actual = cps.getCurrentTemp();
             const expected = 15;
 

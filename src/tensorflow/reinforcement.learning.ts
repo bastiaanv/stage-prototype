@@ -63,7 +63,7 @@ The lose function is the mean squared error method with the Gradient descent opt
 
         for (let epoch = 0; epoch < numEpisodes; epoch++) {
             const wallet = new FacilicomWallet();
-            const cps  = Object.assign( Object.create( Object.getPrototypeOf(cpsCopy)), cpsCopy);
+            const cps: CyberPhysicalSystem = Object.assign( Object.create( Object.getPrototypeOf(cpsCopy)), cpsCopy);
 
             for (let batchNr = 0; batchNr < cps.datasetSize; batchNr++) {
                 // Get q values from Neural Network
