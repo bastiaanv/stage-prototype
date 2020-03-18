@@ -109,7 +109,7 @@ The lose function is the mean squared error method with the Gradient descent opt
                 wallet.add(coins);
 
                 // Get the new q values with the new state
-                const newQTensor = tidy(() => this.model(tensor([[cps.getCurrentTemp()]])));
+                const newQTensor = tidy(() => this.model(tensor([[currentTemp]])));
                 const newQ = await newQTensor.data();
 
                 const maxNewQ = Math.max(...this.float32ArrayToArray(newQ));
