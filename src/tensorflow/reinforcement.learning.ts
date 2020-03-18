@@ -110,9 +110,9 @@ The lose function is the mean squared error method with the Gradient descent opt
                 const actions = modelOutcome[1];
 
                 // If true, then perform random action
-                if (Math.random() < e) {
-                    actions[0] = Math.round(Math.random() * currentQ.length);
-                }
+                // if (Math.random() < e) {
+                //     actions[0] = Math.round(Math.random() * currentQ.length);
+                // }
 
                 // Take action
                 cps.step(this.actionToActionArray(actions[0], currentQ.length));
