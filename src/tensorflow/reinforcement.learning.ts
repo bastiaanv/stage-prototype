@@ -141,12 +141,12 @@ The lose function is the mean squared error method with the Gradient descent opt
         ]);
 
         const file: SavedModel = {
-            weights1: data[0] as Float32Array,
-            bias1: data[1] as Float32Array,
-            weights2: data[2] as Float32Array,
-            bias2: data[3] as Float32Array,
-            weights3: data[4] as Float32Array,
-            bias3: data[5] as Float32Array,
+            weights1: this.float32ArrayToArray(data[0]),
+            bias1: this.float32ArrayToArray(data[1]),
+            weights2: this.float32ArrayToArray(data[2]),
+            bias2: this.float32ArrayToArray(data[3]),
+            weights3: this.float32ArrayToArray(data[4]),
+            bias3: this.float32ArrayToArray(data[5]),
         };
 
         writeFile('model.json', JSON.stringify(file), (err?: any) => {
@@ -183,10 +183,10 @@ The lose function is the mean squared error method with the Gradient descent opt
 }
 
 interface SavedModel {
-    weights1: Float32Array;
-    bias1: Float32Array;
-    weights2: Float32Array;
-    bias2: Float32Array;
-    weights3: Float32Array;
-    bias3: Float32Array;
+    weights1: number[];
+    bias1: number[];
+    weights2: number[];
+    bias2: number[];
+    weights3: number[];
+    bias3: number[];
 }
