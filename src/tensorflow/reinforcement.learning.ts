@@ -10,7 +10,7 @@ export class ReinforcementLearning {
 
     // Hyper parameters
     private readonly discount = 0.6;
-    private readonly learningRate = 0.5;
+    private readonly learningRate = 0.1;
     private readonly numEpochs = 20000;
 
     // Neural network matrixes
