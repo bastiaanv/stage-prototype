@@ -11,7 +11,7 @@ export class ReinforcementLearning {
     // Hyper parameters
     private readonly discount = 0.6;
     private readonly learningRate = 0.5;
-    private readonly numEpochs = 20000;
+    private readonly numEpochs = 1;
 
     // Neural network matrixes
     private readonly weights1: Variable;
@@ -148,7 +148,7 @@ The lose function is the mean squared error method with the Gradient descent opt
             bias3: data[5] as Float32Array,
         };
 
-        writeFile('model.json', file, (err?: any) => {
+        writeFile('model.json', JSON.stringify(file), (err?: any) => {
             if (err) {
                 console.log(err);
             }
