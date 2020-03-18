@@ -36,7 +36,7 @@ export class ReinforcementLearning {
     // Train the model using the new Q values and current state
     private trainModel(targetQ: Tensor, input: Tensor): Scalar {
         return this.optimizer.minimize(() => {
-            // losses.meanSquaredError(targetQ, this.model(input)).print();
+            losses.meanSquaredError(targetQ, this.model(input)).print();
             return losses.meanSquaredError(targetQ, this.model(input))
         }) as Scalar;
     }
