@@ -8,6 +8,10 @@ export class ReinforcementLearning {
 
     private readonly accuracies: number[] = [];
 
+    // Normalization options
+    private readonly minTemp = -20;
+    private readonly maxTemp = 40;
+
     // Hyper parameters
     private readonly discount = 0.6;
     private readonly learningRate = 0.1;
@@ -81,7 +85,7 @@ The lose function is the mean squared error method with the Gradient descent opt
 
             for (let batchNr = 0; batchNr < cps.datasetSize; batchNr++) {
                 // Get q values from Neural Network
-                const currentTemp: number = cps.getCurrentTemp();
+                const currentTemp: number = this.normalize(cps.getCurrentTemp());
                 const qsa = tidy(() => this.model(tensor([[currentTemp]])));
                 const predictTensor = tidy(() => this.predict(tensor([[currentTemp]])));
 
@@ -156,6 +160,10 @@ The lose function is the mean squared error method with the Gradient descent opt
                 console.log(err);
             }
         });
+    }
+
+    private normalize(temp: number): number {
+        return (temp - this.minTemp) / (this.maxTemp - this.minTemp);
     }
 
     // Transform a float32array to a basic js array
