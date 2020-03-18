@@ -61,7 +61,6 @@ The lose function is the mean squared error method with the Gradient descent opt
 
         } else {
             const modelJson: SavedModel = JSON.parse(readFileSync('model.json').toString());
-            console.log(modelJson)
 
             this.weights1 = variable(tensor(modelJson.weights1));
             this.bias1 = variable(tensor(modelJson.bias1));
