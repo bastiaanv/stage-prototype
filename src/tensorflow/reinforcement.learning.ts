@@ -29,7 +29,20 @@ export class ReinforcementLearning {
 
     // The neural network
     private model(x: Tensor): Tensor {
-        return x.matMul(this.weights1).add(this.bias1).softmax().matMul(this.weights2).add(this.bias2).softmax().matMul(this.weights3).add(this.bias3);
+        return x
+                // Hidden layer 1
+                // .matMul(this.weights1)
+                // .add(this.bias1)
+                // .softmax()
+
+                // Hidden layer 2
+                // .matMul(this.weights2)
+                // .add(this.bias2)
+                // .softmax()
+
+                // Output
+                .matMul(this.weights3)
+                .add(this.bias3);
     }
 
     // Use the model to get the index of the predicted action based on the given state
