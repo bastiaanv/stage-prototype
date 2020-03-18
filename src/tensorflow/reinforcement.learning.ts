@@ -73,7 +73,7 @@ The lose function is the mean squared error method with the Gradient descent opt
             this.bias1 = variable(randomNormal([countHiddenLayer1]));
             this.weights2 = variable(randomNormal([countHiddenLayer1, countHiddenLayer2]));
             this.bias2 = variable(randomNormal([countHiddenLayer2]));
-            this.weights3 = variable(randomNormal([countHiddenLayer2, countOutput]));
+            this.weights3 = variable(randomNormal([countInput, countOutput]));
             this.bias3 = variable(randomNormal([countOutput]));
 
         } else {
