@@ -26,8 +26,8 @@ Neural network model:
         Input                   Hidden layer 1                  Hidden layer 2                      Output
     (countInput neurons) ->   (countHiddenLayer1 neurons)  ->  (countHiddenLayer2 neurons)   ->  (countOutput neuron)
 
-This model is trained via a reinforcement learning algorithm and uses the softmax activation function.
-The lose function is the mean squared error method with the Adam optimizer as our learning partner.
+This model is trained via a reinforcement learning algorithm and uses the relu and softmax activation function.
+The lose function is the mean squared error method with the stochastic gradient descent optimizer as our learning partner.
 */
 
     constructor(countInput: number, countHiddenLayer1: number, countHiddenLayer2: number, countOutput: number) {
@@ -141,13 +141,4 @@ The lose function is the mean squared error method with the Adam optimizer as ou
 
         return output;
     }
-}
-
-interface SavedModel {
-    weights1: number[];
-    bias1: number[];
-    weights2: number[];
-    bias2: number[];
-    weights3: number[];
-    bias3: number[];
 }
