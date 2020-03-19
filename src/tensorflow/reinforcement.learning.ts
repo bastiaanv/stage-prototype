@@ -4,8 +4,6 @@ import { Tensor, tensor, train, tidy, sequential, layers, History, loadLayersMod
 import { FacilicomCoin } from '../rewards/facilicom.coin';
 import { resolve } from 'path';
 
-import '@tensorflow/tfjs-node-gpu';
-
 export class ReinforcementLearning {
 
     private readonly pathToModel = 'file://' + resolve(__dirname, '..', '..', 'model');
