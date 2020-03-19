@@ -14,7 +14,7 @@ export class ReinforcementLearning {
 
     // Hyper parameters
     private readonly discount = 0.6;
-    private readonly learningRate = 0.1;
+    private readonly learningRate = 0.5;
     private readonly numEpochs = 20000;
 
     // Neural network matrixes
@@ -31,25 +31,26 @@ export class ReinforcementLearning {
     private model(x: Tensor): Tensor {
         return x
                 // Hidden layer 1
-                // .matMul(this.weights1)
-                // .add(this.bias1)
-                // .softmax()
+                .matMul(this.weights1)
+                .add(this.bias1)
+                .relu()
 
                 // Hidden layer 2
-                // .matMul(this.weights2)
-                // .add(this.bias2)
-                // .softmax()
+                .matMul(this.weights2)
+                .add(this.bias2)
+                .relu()
 
                 // Output
                 .matMul(this.weights3)
-                .add(this.bias3);
+                .add(this.bias3)
+                .softmax();
     }
 
     // Use the model to get the index of the predicted action based on the given state
     private predict(x: Tensor): Tensor {
         return this.model(x).argMax(1);
     }
- 
+
     // Train the model using the new Q values and current state
     private trainModel(targetQ: Tensor, input: Tensor): Scalar {
         return this.optimizer.minimize(() => {
@@ -64,7 +65,7 @@ Neural network model:
     (countInput neurons) ->   (countHiddenLayer1 neurons)  ->  (countHiddenLayer2 neurons)   ->  (countOutput neuron)
 
 This model is trained via a reinforcement learning algorithm and uses the softmax activation function.
-The lose function is the mean squared error method with the Gradient descent optimizer as our learning partner.
+The lose function is the mean squared error method with the Adam optimizer as our learning partner.
 */
 
     constructor(countInput: number, countHiddenLayer1: number, countHiddenLayer2: number, countOutput: number, loadFile: boolean = false) {
@@ -73,7 +74,7 @@ The lose function is the mean squared error method with the Gradient descent opt
             this.bias1 = variable(randomNormal([countHiddenLayer1]));
             this.weights2 = variable(randomNormal([countHiddenLayer1, countHiddenLayer2]));
             this.bias2 = variable(randomNormal([countHiddenLayer2]));
-            this.weights3 = variable(randomNormal([countInput, countOutput]));
+            this.weights3 = variable(randomNormal([countHiddenLayer2, countOutput]));
             this.bias3 = variable(randomNormal([countOutput]));
 
         } else {
@@ -96,7 +97,8 @@ The lose function is the mean squared error method with the Gradient descent opt
             const wallet = new FacilicomWallet();
             const cps: CyberPhysicalSystem = Object.assign( Object.create( Object.getPrototypeOf(cpsCopy)), cpsCopy);
 
-            for (let batchNr = 0; batchNr < cps.datasetSize; batchNr++) {
+            for (let batchNr = 0; batchNr < 60000; batchNr++) {
+                // The first step is to take a step into time using our CPS (Cyber Physical System). This way, we can train on fresh data/values/states
                 // Get q values from Neural Network
                 const currentTemp: number = this.normalize(cps.getCurrentTemp());
                 const qsa = tidy(() => this.model(tensor([[currentTemp]])));
@@ -109,7 +111,11 @@ The lose function is the mean squared error method with the Gradient descent opt
                 const currentQ = modelOutcome[0];
                 const actions = modelOutcome[1];
 
-                // If true, then perform random action
+                console.log(cps.getCurrentTemp());
+                // qsa.print();
+                // this.weights3.print();
+
+                // If true, then perform random action instead of action that would be taken by the Neural Network
                 // if (Math.random() < e) {
                 //     actions[0] = Math.round(Math.random() * currentQ.length);
                 // }
@@ -117,16 +123,21 @@ The lose function is the mean squared error method with the Gradient descent opt
                 // Take action
                 cps.step(this.actionToActionArray(actions[0], currentQ.length));
 
+                // Now we can start training the Neural Network, since we have taken the next step in time
                 // Get and save reward (Facilicom coins) to Facilicom wallet
                 const coins: FacilicomCoin[] = cps.getReward();
                 wallet.add(coins);
 
                 // Get the new q values with the new state
-                const newQTensor = tidy(() => this.model(tensor([[currentTemp]])));
+                const nextTemp: number = this.normalize(cps.getCurrentTemp());
+                const newQTensor = tidy(() => this.model(tensor([[nextTemp]])));
                 const newQ = await newQTensor.data();
 
                 const maxNewQ = Math.max(...this.float32ArrayToArray(newQ));
+                console.log(actions)
+                console.log(currentQ);
                 currentQ[actions[0]] = wallet.getLastValue() + this.discount * maxNewQ;
+                console.log(currentQ);
 
                 // Train the model based on new Q values and current state
                 tidy(() => this.trainModel(tensor([currentQ]), tensor([[currentTemp]])));
@@ -138,11 +149,12 @@ The lose function is the mean squared error method with the Gradient descent opt
             }
 
             // Decrease chance on a random action as we progress in learning
-            e = 1/( ( epoch/50 ) + 10 );
+            // e = 1/( ( epoch/50 ) + 10 );
             // console.log(`Facilicom coins gained during epoch ${epoch}: ${wallet.getTotalValue()}`);
             // console.log(`Accuracy during epoch ${epoch}: ${(wallet.getTotalValue()/cps.datasetSize *100).toFixed(1)}`);
-            this.accuracies.push(wallet.getTotalValue() / cps.datasetSize * 100);
-            console.log(`Average accuracy after ${epoch} epochs: ${(this.accuracies.reduce((a, b) => a+ b)/this.accuracies.length).toFixed(1)}`);
+            // this.accuracies.push((wallet.getTotalValue() + 96) / (cps.datasetSize + 96) * 100);
+            // console.log(`Average accuracy after ${epoch} epochs: ${(this.accuracies.reduce((a, b) => a+ b)/this.accuracies.length).toFixed(1)}%, last accuracy: ${this.accuracies[this.accuracies.length-1].toFixed(1)}%`);
+            // this.weights3.print();
         }
     }
 
