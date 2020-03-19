@@ -1,11 +1,12 @@
 import { CyberPhysicalSystem } from '../cps/cyber.physical.system.interface';
 import { FacilicomWallet } from '../rewards/facilicom.wallet';
-import { Tensor, variable, randomNormal, Variable, tensor, backend_util, train, Scalar, tidy, losses } from '@tensorflow/tfjs-node';
+import { Tensor, tensor, backend_util, train, tidy, sequential, layers, History, loadLayersModel, LayersModel } from '@tensorflow/tfjs-node';
 import { FacilicomCoin } from '../rewards/facilicom.coin';
-import { writeFile, readFileSync } from 'fs';
+import { resolve } from 'path';
 
 export class ReinforcementLearning {
 
+    private readonly pathToModel = 'file://' + resolve(__dirname, '..', '..', 'model');
     private readonly accuracies: number[] = [];
 
     // Normalization options
@@ -14,111 +15,65 @@ export class ReinforcementLearning {
 
     // Hyper parameters
     private readonly discount = 0.6;
-    private readonly learningRate = 0.5;
+    private readonly learningRate = 0.01;
     private readonly numEpochs = 20000;
 
-    // Neural network matrixes
-    private readonly weights1: Variable;
-    private readonly bias1: Variable;
-    private readonly weights2: Variable;
-    private readonly bias2: Variable;
-    private readonly weights3: Variable;
-    private readonly bias3: Variable;
-
-    private readonly optimizer = train.sgd(this.learningRate);
-
-    // The neural network
-    private model(x: Tensor): Tensor {
-        return x
-                // Hidden layer 1
-                .matMul(this.weights1)
-                .add(this.bias1)
-                .relu()
-
-                // Hidden layer 2
-                .matMul(this.weights2)
-                .add(this.bias2)
-                .relu()
-
-                // Output
-                .matMul(this.weights3)
-                .add(this.bias3)
-                .softmax();
-    }
-
-    // Use the model to get the index of the predicted action based on the given state
-    private predict(x: Tensor): Tensor {
-        return this.model(x).argMax(1);
-    }
-
-    // Train the model using the new Q values and current state
-    private trainModel(targetQ: Tensor, input: Tensor): Scalar {
-        return this.optimizer.minimize(() => {
-            // losses.meanSquaredError(targetQ, this.model(input)).print();
-            return losses.meanSquaredError(targetQ, this.model(input))
-        }) as Scalar;
-    }
+    // Neural network
+    private model: LayersModel;
 
 /*
 Neural network model:
         Input                   Hidden layer 1                  Hidden layer 2                      Output
     (countInput neurons) ->   (countHiddenLayer1 neurons)  ->  (countHiddenLayer2 neurons)   ->  (countOutput neuron)
 
-This model is trained via a reinforcement learning algorithm and uses the softmax activation function.
-The lose function is the mean squared error method with the Adam optimizer as our learning partner.
+This model is trained via a reinforcement learning algorithm and uses the relu and softmax activation function.
+The lose function is the mean squared error method with the stochastic gradient descent optimizer as our learning partner.
 */
 
-    constructor(countInput: number, countHiddenLayer1: number, countHiddenLayer2: number, countOutput: number, loadFile: boolean = false) {
-        if (!loadFile) {
-            this.weights1 = variable(randomNormal([countInput, countHiddenLayer1]));
-            this.bias1 = variable(randomNormal([countHiddenLayer1]));
-            this.weights2 = variable(randomNormal([countHiddenLayer1, countHiddenLayer2]));
-            this.bias2 = variable(randomNormal([countHiddenLayer2]));
-            this.weights3 = variable(randomNormal([countHiddenLayer2, countOutput]));
-            this.bias3 = variable(randomNormal([countOutput]));
+    constructor(countInput: number, countHiddenLayer1: number, countHiddenLayer2: number, countOutput: number) {
+        this.model = sequential({
+            layers: [
+            layers.dense({inputShape: [countInput], units: countHiddenLayer1, activation: 'relu'}),
+            layers.dense({inputShape: [countHiddenLayer1], units: countHiddenLayer2, activation: 'relu'}),
+            layers.dense({units: countOutput, activation: 'softmax'}),
+            ]
+        });
 
-        } else {
-            const modelJson: SavedModel = JSON.parse(readFileSync('model.json').toString());
+        this.model.compile({
+            optimizer: train.sgd(this.learningRate),
+            loss: 'meanSquaredError'
+        });
+    }
 
-            this.weights1 = variable(tensor(modelJson.weights1));
-            this.bias1 = variable(tensor(modelJson.bias1));
-            this.weights2 = variable(tensor(modelJson.weights2));
-            this.bias2 = variable(tensor(modelJson.bias2));
-            this.weights3 = variable(tensor(modelJson.weights3));
-            this.bias3 = variable(tensor(modelJson.bias3));
-        }
+    public async loadModelFromFile() {
+        this.model = await loadLayersModel(this.pathToModel)
+        this.model.compile({
+            optimizer: train.sgd(this.learningRate),
+            loss: 'meanSquaredError'
+        });
     }
 
     public async train(cpsCopy: CyberPhysicalSystem) {
-        // Chance on random action
-        let e = 0.1;
+        let epsilon = 0.1;
+        const histories: History[] = [];
 
         for (let epoch = 0; epoch < this.numEpochs; epoch++) {
             const wallet = new FacilicomWallet();
             const cps: CyberPhysicalSystem = Object.assign( Object.create( Object.getPrototypeOf(cpsCopy)), cpsCopy);
 
-            for (let batchNr = 0; batchNr < 60000; batchNr++) {
+            for (let batchNr = 0; batchNr < 100; batchNr++) {
                 // The first step is to take a step into time using our CPS (Cyber Physical System). This way, we can train on fresh data/values/states
                 // Get q values from Neural Network
                 const currentTemp: number = this.normalize(cps.getCurrentTemp());
-                const qsa = tidy(() => this.model(tensor([[currentTemp]])));
-                const predictTensor = tidy(() => this.predict(tensor([[currentTemp]])));
+                const qsa = tidy(() => this.model.predict(tensor([[currentTemp]]))) as Tensor;
+                const action = qsa.argMax(1);
 
-                const modelOutcome = await Promise.all([
-                    qsa.data(),
-                    predictTensor.data(),
-                ]);
-                const currentQ = modelOutcome[0];
-                const actions = modelOutcome[1];
-
-                console.log(cps.getCurrentTemp());
-                // qsa.print();
-                // this.weights3.print();
+                const [currentQ, actions] = await Promise.all([ qsa.data(), action.data() ]);
 
                 // If true, then perform random action instead of action that would be taken by the Neural Network
-                // if (Math.random() < e) {
-                //     actions[0] = Math.round(Math.random() * currentQ.length);
-                // }
+                if (Math.random() < epsilon) {
+                    actions[0] = Math.round(Math.random() * currentQ.length);
+                }
 
                 // Take action
                 cps.step(this.actionToActionArray(actions[0], currentQ.length));
@@ -129,59 +84,33 @@ The lose function is the mean squared error method with the Adam optimizer as ou
                 wallet.add(coins);
 
                 // Get the new q values with the new state
-                const nextTemp: number = this.normalize(cps.getCurrentTemp());
-                const newQTensor = tidy(() => this.model(tensor([[nextTemp]])));
+                const nextTemp: Tensor = tensor([[this.normalize(cps.getCurrentTemp())]]);
+                const newQTensor = tidy(() => this.model.predict(nextTemp)) as Tensor;
                 const newQ = await newQTensor.data();
 
                 const maxNewQ = Math.max(...this.float32ArrayToArray(newQ));
-                console.log(actions)
-                console.log(currentQ);
-                currentQ[actions[0]] = wallet.getLastValue() + this.discount * maxNewQ;
-                console.log(currentQ);
+                newQ[actions[0]] = wallet.getLastValue() + this.discount * maxNewQ;
 
-                // Train the model based on new Q values and current state
-                tidy(() => this.trainModel(tensor([currentQ]), tensor([[currentTemp]])));
+                // Train model
+                const target = tensor([newQ]);
+                histories.push(await this.model.fit(nextTemp, target, {verbose: 0}));
 
                 // Cleanup tensors to prevent memory leak
+                nextTemp.dispose();
                 qsa.dispose();
-                predictTensor.dispose();
-                newQTensor.dispose();
+                action.dispose();
+                target.dispose();
             }
 
-            // Decrease chance on a random action as we progress in learning
-            // e = 1/( ( epoch/50 ) + 10 );
-            // console.log(`Facilicom coins gained during epoch ${epoch}: ${wallet.getTotalValue()}`);
-            // console.log(`Accuracy during epoch ${epoch}: ${(wallet.getTotalValue()/cps.datasetSize *100).toFixed(1)}`);
-            // this.accuracies.push((wallet.getTotalValue() + 96) / (cps.datasetSize + 96) * 100);
-            // console.log(`Average accuracy after ${epoch} epochs: ${(this.accuracies.reduce((a, b) => a+ b)/this.accuracies.length).toFixed(1)}%, last accuracy: ${this.accuracies[this.accuracies.length-1].toFixed(1)}%`);
-            // this.weights3.print();
+            epsilon = 1/( ( epoch/50 ) + 10 );
+            this.accuracies.push((wallet.getTotalValue() + 96) / (cps.datasetSize + 96) * 100);
+
+            console.log(`Epoch ${epoch}; Average loss: ${(histories.reduce((a,b) => a + (b.history.loss[0] as number), 0)/histories.length).toFixed(4)}, last loss: ${(histories[histories.length - 1].history.loss[0] as number).toFixed(4)}, average accuracy: ${(this.accuracies.reduce((a, b) => a+ b)/this.accuracies.length).toFixed(1)}%, last accuracy: ${this.accuracies[this.accuracies.length-1].toFixed(1)}%`);
         }
     }
 
     public async saveToFile(): Promise<void> {
-        const data = await Promise.all([
-            this.weights1.data(),
-            this.bias1.data(),
-            this.weights2.data(),
-            this.bias2.data(),
-            this.weights3.data(),
-            this.bias3.data(),
-        ]);
-
-        const file: SavedModel = {
-            weights1: this.float32ArrayToArray(data[0]),
-            bias1: this.float32ArrayToArray(data[1]),
-            weights2: this.float32ArrayToArray(data[2]),
-            bias2: this.float32ArrayToArray(data[3]),
-            weights3: this.float32ArrayToArray(data[4]),
-            bias3: this.float32ArrayToArray(data[5]),
-        };
-
-        writeFile('model.json', JSON.stringify(file), (err?: any) => {
-            if (err) {
-                console.log(err);
-            }
-        });
+        await this.model.save(this.pathToModel);
     }
 
     private normalize(temp: number): number {
@@ -212,13 +141,4 @@ The lose function is the mean squared error method with the Adam optimizer as ou
 
         return output;
     }
-}
-
-interface SavedModel {
-    weights1: number[];
-    bias1: number[];
-    weights2: number[];
-    bias2: number[];
-    weights3: number[];
-    bias3: number[];
 }
