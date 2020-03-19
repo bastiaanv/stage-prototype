@@ -25,4 +25,4 @@ const rl = new ReinforcementLearning(1, 10, 10, 3);
 rl.train(cps);
 
 // Save model when done training
-rl.saveToFile();
+// rl.saveToFile();
