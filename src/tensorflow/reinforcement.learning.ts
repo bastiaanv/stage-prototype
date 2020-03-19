@@ -1,6 +1,6 @@
 import { CyberPhysicalSystem } from '../cps/cyber.physical.system.interface';
 import { FacilicomWallet } from '../rewards/facilicom.wallet';
-import { Tensor, tensor, train, tidy, sequential, layers, History, loadLayersModel, LayersModel } from '@tensorflow/tfjs';
+import { Tensor, tensor, train, tidy, sequential, layers, History, loadLayersModel, LayersModel, backend_util } from '@tensorflow/tfjs-node';
 import { FacilicomCoin } from '../rewards/facilicom.coin';
 import { resolve } from 'path';
 
@@ -118,7 +118,7 @@ The lose function is the mean squared error method with the stochastic gradient 
     }
 
     // Transform a float32array to a basic js array
-    private float32ArrayToArray(array: any): number[] {
+    private float32ArrayToArray(array: backend_util.TypedArray): number[] {
         const output: number[] = [];
         for (const item of array) {
             output.push(item);
