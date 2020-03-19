@@ -47,13 +47,13 @@ export class ReinforcementLearning {
 
     // Use the model to get the index of the predicted action based on the given state
     private predict(x: Tensor): Tensor {
-        return this.model(x).argMax();
+        return this.model(x).argMax(1);
     }
-
+ 
     // Train the model using the new Q values and current state
     private trainModel(targetQ: Tensor, input: Tensor): Scalar {
         return this.optimizer.minimize(() => {
-            losses.meanSquaredError(targetQ, this.model(input)).print();
+            // losses.meanSquaredError(targetQ, this.model(input)).print();
             return losses.meanSquaredError(targetQ, this.model(input))
         }) as Scalar;
     }
@@ -127,9 +127,6 @@ The lose function is the mean squared error method with the Gradient descent opt
 
                 const maxNewQ = Math.max(...this.float32ArrayToArray(newQ));
                 currentQ[actions[0]] = wallet.getLastValue() + this.discount * maxNewQ;
-
-                console.log(await qsa.data())
-                console.log(currentQ);
 
                 // Train the model based on new Q values and current state
                 tidy(() => this.trainModel(tensor([currentQ]), tensor([[currentTemp]])));
