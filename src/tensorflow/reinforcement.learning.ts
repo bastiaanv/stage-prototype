@@ -1,8 +1,10 @@
 import { CyberPhysicalSystem } from '../cps/cyber.physical.system.interface';
 import { FacilicomWallet } from '../rewards/facilicom.wallet';
-import { Tensor, tensor, backend_util, train, tidy, sequential, layers, History, loadLayersModel, LayersModel } from '@tensorflow/tfjs-node-gpu';
+import { Tensor, tensor, backend_util, train, tidy, sequential, layers, History, loadLayersModel, LayersModel } from '@tensorflow/tfjs';
 import { FacilicomCoin } from '../rewards/facilicom.coin';
 import { resolve } from 'path';
+
+import '@tensorflow/tfjs-node-gpu';
 
 export class ReinforcementLearning {
 

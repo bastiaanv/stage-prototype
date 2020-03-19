@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/bastiaanv/stage-prototype#readme",
   "dependencies": {
+    "@tensorflow/tfjs": "^1.7.0",
     "@tensorflow/tfjs-node-gpu": "^1.7.0"
   },
   "devDependencies": {
