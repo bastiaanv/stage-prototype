@@ -103,7 +103,7 @@ The lose function is the mean squared error method with the stochastic gradient 
             }
 
             epsilon = 1/( ( epoch/50 ) + 10 );
-            this.accuracies.push((wallet.getTotalValue() + 96) / (cps.datasetSize + 96) * 100);
+            this.accuracies.push((wallet.getTotalValue() + 100) / (cps.datasetSize + 100) * 100);
 
             console.log(`Epoch ${epoch}; Average loss: ${(histories.reduce((a,b) => a + (b.history.loss[0] as number), 0)/histories.length).toFixed(4)}, last loss: ${(histories[histories.length - 1].history.loss[0] as number).toFixed(4)}, average accuracy: ${(this.accuracies.reduce((a, b) => a+ b)/this.accuracies.length).toFixed(1)}%, last accuracy: ${this.accuracies[this.accuracies.length-1].toFixed(1)}%`);
         }
