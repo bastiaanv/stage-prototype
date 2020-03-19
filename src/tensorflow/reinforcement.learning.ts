@@ -1,6 +1,6 @@
 import { CyberPhysicalSystem } from '../cps/cyber.physical.system.interface';
 import { FacilicomWallet } from '../rewards/facilicom.wallet';
-import { Tensor, tensor, backend_util, train, tidy, sequential, layers, History, loadLayersModel, LayersModel } from '@tensorflow/tfjs-node';
+import { Tensor, tensor, backend_util, train, tidy, sequential, layers, History, loadLayersModel, LayersModel } from '@tensorflow/tfjs-node-gpu';
 import { FacilicomCoin } from '../rewards/facilicom.coin';
 import { resolve } from 'path';
 
