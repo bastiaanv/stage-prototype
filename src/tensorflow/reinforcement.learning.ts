@@ -1,6 +1,6 @@
 import { CyberPhysicalSystem } from '../cps/cyber.physical.system.interface';
 import { FacilicomWallet } from '../rewards/facilicom.wallet';
-import { Tensor, tensor, train, tidy, sequential, layers, History, loadLayersModel, LayersModel, backend_util } from '@tensorflow/tfjs-node';
+import { Tensor, tensor, train, tidy, sequential, layers, History, loadLayersModel, LayersModel, backend_util } from '@tensorflow/tfjs-node-gpu';
 import { FacilicomCoin } from '../rewards/facilicom.coin';
 import { resolve } from 'path';
 
@@ -39,18 +39,12 @@ The lose function is the mean squared error method with the stochastic gradient 
             ]
         });
 
-        this.model.compile({
-            optimizer: train.sgd(this.learningRate),
-            loss: 'meanSquaredError'
-        });
+        this.modelCompile();
     }
 
     public async loadModelFromFile() {
         this.model = await loadLayersModel(this.pathToModel)
-        this.model.compile({
-            optimizer: train.sgd(this.learningRate),
-            loss: 'meanSquaredError'
-        });
+        this.modelCompile();
     }
 
     public async train(cpsCopy: CyberPhysicalSystem) {
@@ -113,6 +107,13 @@ The lose function is the mean squared error method with the stochastic gradient 
         await this.model.save(this.pathToModel);
     }
 
+    public predict(temp: number): Promise<backend_util.TypedArray> {
+        const currentTemp: number = this.normalize(temp);
+        const qsa = tidy(() => this.model.predict(tensor([[currentTemp]]))) as Tensor;
+
+        return qsa.argMax(1).data();
+    }
+
     private normalize(temp: number): number {
         return (temp - this.minTemp) / (this.maxTemp - this.minTemp);
     }
@@ -140,5 +141,12 @@ The lose function is the mean squared error method with the stochastic gradient 
         }
 
         return output;
+    }
+
+    private modelCompile(): void {
+        this.model.compile({
+            optimizer: train.sgd(this.learningRate),
+            loss: 'meanSquaredError'
+        });
     }
 }
