@@ -89,7 +89,7 @@ The lose function is the mean squared error method with the stochastic gradient 
                 wallet.add(coins);
 
                 // Get the new q values with the new state
-                const nextTemp: Tensor = tensor([[this.normalize(cps.getCurrentTemp(), true)]]);
+                const nextTemp: Tensor = tensor([[currentTemp]]);
                 const newQTensor = tidy(() => this.model.predict(nextTemp)) as Tensor;
                 const newQ = await newQTensor.data();
 
