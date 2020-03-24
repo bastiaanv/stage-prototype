@@ -43,8 +43,19 @@ The lose function is the mean squared error method with the stochastic gradient 
     }
 
     public async loadModelFromFile() {
-        this.model = await loadLayersModel(this.pathToModel)
+        this.model = await loadLayersModel(this.pathToModel + '/model.json')
         this.modelCompile();
+    }
+
+    public async saveToFile(): Promise<void> {
+        await this.model.save(this.pathToModel);
+    }
+
+    public predict(temp: number): Promise<backend_util.TypedArray> {
+        const currentTemp: number = this.normalize(temp);
+        const qsa = tidy(() => this.model.predict(tensor([[currentTemp]]))) as Tensor;
+
+        return qsa.argMax(1).data();
     }
 
     public async train(cpsCopy: CyberPhysicalSystem) {
@@ -101,17 +112,6 @@ The lose function is the mean squared error method with the stochastic gradient 
 
             console.log(`Epoch ${epoch}; Average loss: ${(histories.reduce((a,b) => a + (b.history.loss[0] as number), 0)/histories.length).toFixed(4)}, last loss: ${(histories[histories.length - 1].history.loss[0] as number).toFixed(4)}, average accuracy: ${(this.accuracies.reduce((a, b) => a+ b)/this.accuracies.length).toFixed(1)}%, last accuracy: ${this.accuracies[this.accuracies.length-1].toFixed(1)}%`);
         }
-    }
-
-    public async saveToFile(): Promise<void> {
-        await this.model.save(this.pathToModel);
-    }
-
-    public predict(temp: number): Promise<backend_util.TypedArray> {
-        const currentTemp: number = this.normalize(temp);
-        const qsa = tidy(() => this.model.predict(tensor([[currentTemp]]))) as Tensor;
-
-        return qsa.argMax(1).data();
     }
 
     private normalize(temp: number): number {
