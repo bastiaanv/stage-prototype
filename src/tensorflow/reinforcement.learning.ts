@@ -93,8 +93,8 @@ The lose function is the mean squared error method with the stochastic gradient 
                 const newQTensor = tidy(() => this.model.predict(nextTemp)) as Tensor;
                 const newQ = await newQTensor.data();
 
-                // const maxNewQ = Math.max(...this.float32ArrayToArray(newQ));
-                newQ[actions[0]] = wallet.getLastValue();
+                const maxNewQ = Math.max(...this.float32ArrayToArray(newQ));
+                newQ[actions[0]] = wallet.getLastValue() + this.discount * maxNewQ;
 
                 // Train model
                 const target = tensor([newQ]);
