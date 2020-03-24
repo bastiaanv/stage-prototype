@@ -30,4 +30,5 @@ rl.loadModelFromFile().then(async () => {
 
     // Write CSV file
     await writer.writeRecords(data);
+    console.log('Done writing CSV file!')
 });

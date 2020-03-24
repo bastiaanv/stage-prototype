@@ -1,6 +1,6 @@
 import { CyberPhysicalSystem } from '../cps/cyber.physical.system.interface';
 import { FacilicomWallet } from '../rewards/facilicom.wallet';
-import { Tensor, tensor, train, tidy, sequential, layers, History, loadLayersModel, LayersModel, backend_util } from '@tensorflow/tfjs-node';
+import { Tensor, tensor, train, tidy, sequential, layers, History, loadLayersModel, LayersModel, backend_util } from '@tensorflow/tfjs-node-gpu';
 import { FacilicomCoin } from '../rewards/facilicom.coin';
 import { resolve } from 'path';
 
@@ -93,8 +93,8 @@ The lose function is the mean squared error method with the stochastic gradient 
                 const newQTensor = tidy(() => this.model.predict(nextTemp)) as Tensor;
                 const newQ = await newQTensor.data();
 
-                const maxNewQ = Math.max(...this.float32ArrayToArray(newQ));
-                newQ[actions[0]] = wallet.getLastValue() + this.discount * maxNewQ;
+                // const maxNewQ = Math.max(...this.float32ArrayToArray(newQ));
+                newQ[actions[0]] = wallet.getLastValue();
 
                 // Train model
                 const target = tensor([newQ]);
