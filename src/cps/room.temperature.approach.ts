@@ -16,6 +16,9 @@ export class RoomTemperatureApproach implements CyberPhysicalSystem {
 
     private readonly rewardSystems:         RewardSystem[];
 
+    private wasHeating:                     boolean = false;
+    private wasCooling:                     boolean = false;
+
     private currentTemp:                    number; // T
     public getCurrentTemp():                number {
         return this.currentTemp;
@@ -51,20 +54,20 @@ export class RoomTemperatureApproach implements CyberPhysicalSystem {
             throw new Error('Actions does not match nr of actions available');
         }
 
-        const actionHeating = actions[1];
-        const actionCooling = actions[2];
+        this.wasHeating = actions[1] > 0;
+        this.wasCooling = actions[2] > 0;
 
         this.currentTemp =  this.calculatePassiveCooling() +
-                            this.calculateActiveHeating(actionHeating) +
-                            this.calculateActiveCooling(actionCooling);
+                            this.calculateActiveHeating(actions[1]) +
+                            this.calculateActiveCooling(actions[2]);
 
-        if (actionHeating > 0 && actionCooling === 0 && this.currentTemp > this.heatingTemperature) {
+        if (this.wasHeating && !this.wasCooling && this.currentTemp > this.heatingTemperature) {
             this.currentTemp = this.heatingTemperature;
 
-        } else if (actionCooling > 0 && actionHeating === 0 && this.currentTemp < this.coolingTemperature) {
+        } else if (this.wasCooling && !this.wasHeating && this.currentTemp < this.coolingTemperature) {
             this.currentTemp = this.coolingTemperature;
 
-        } else if (actionCooling === 0 && actionHeating === 0 && this.currentTemp < this.outsideTemp) {
+        } else if (!this.wasCooling && !this.wasHeating && this.currentTemp < this.outsideTemp) {
             this.currentTemp = this.outsideTemp;
         }
     }
@@ -73,7 +76,7 @@ export class RoomTemperatureApproach implements CyberPhysicalSystem {
         const reward: FacilicomCoin[] = [];
         for (const system of this.rewardSystems) {
             // if (system instanceof TemperatureRewardSystem) {
-            reward.push(system.getReward(this.getCurrentTemp()));
+            reward.push(system.getReward(this.getCurrentTemp(), this.wasHeating, this.wasCooling));
             // }
         }
 

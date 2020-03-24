@@ -9,13 +9,16 @@ import { FacilicomCoin } from './facilicom.coin';
 export class TemperatureRewardSystem implements RewardSystem {
     private readonly rewardFactor = 1;
 
-    getReward(temperature: number): FacilicomCoin {
+    getReward(temperature: number, wasHeating: boolean, wasCooling: boolean): FacilicomCoin {
         let value = 0;
-        if (temperature > 20 || temperature < 16) {
-            value = this.rewardFactor * -1;
+        if (temperature > 20) {
+            value = this.rewardFactor * (wasCooling ? 1 : -1);
 
-        } else if (temperature >= 18 && temperature <= 20) {
-            value = this.rewardFactor;
+        } else if (temperature < 16) {
+            value = this.rewardFactor * (wasHeating ? 1 : -1);
+
+        } else if (temperature > 18 && temperature <= 20) {
+            value = this.rewardFactor * (!wasHeating && !wasCooling ? 1 : -1);
         }
 
         return new FacilicomCoin(value);

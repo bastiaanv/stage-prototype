@@ -52,7 +52,7 @@ The lose function is the mean squared error method with the stochastic gradient 
     }
 
     public predict(temp: number): Promise<backend_util.TypedArray> {
-        const currentTemp: number = this.normalize(temp);
+        const currentTemp: number = this.normalize(temp, true);
         const qsa = tidy(() => this.model.predict(tensor([[currentTemp]]))) as Tensor;
 
         return qsa.argMax(1).data();
@@ -69,7 +69,7 @@ The lose function is the mean squared error method with the stochastic gradient 
             for (let batchNr = 0; batchNr < 100; batchNr++) {
                 // The first step is to take a step into time using our CPS (Cyber Physical System). This way, we can train on fresh data/values/states
                 // Get q values from Neural Network
-                const currentTemp: number = this.normalize(cps.getCurrentTemp());
+                const currentTemp: number = this.normalize(cps.getCurrentTemp(), true);
                 const qsa = tidy(() => this.model.predict(tensor([[currentTemp]]))) as Tensor;
                 const action = qsa.argMax(1);
 
@@ -89,12 +89,12 @@ The lose function is the mean squared error method with the stochastic gradient 
                 wallet.add(coins);
 
                 // Get the new q values with the new state
-                const nextTemp: Tensor = tensor([[this.normalize(cps.getCurrentTemp())]]);
+                const nextTemp: Tensor = tensor([[this.normalize(cps.getCurrentTemp(), true)]]);
                 const newQTensor = tidy(() => this.model.predict(nextTemp)) as Tensor;
                 const newQ = await newQTensor.data();
 
                 const maxNewQ = Math.max(...this.float32ArrayToArray(newQ));
-                newQ[actions[0]] = wallet.getLastValue() + this.discount * maxNewQ;
+                newQ[actions[0]] = this.normalize(wallet.getLastValue(), false);
 
                 // Train model
                 const target = tensor([newQ]);
@@ -114,8 +114,12 @@ The lose function is the mean squared error method with the stochastic gradient 
         }
     }
 
-    private normalize(temp: number): number {
-        return (temp - this.minTemp) / (this.maxTemp - this.minTemp);
+    private normalize(x: number, isTemp: boolean): number {
+        if (isTemp) {
+            return (x - this.minTemp) / (this.maxTemp - this.minTemp);
+        }
+
+        return (x - -1) / 2;
     }
 
     // Transform a float32array to a basic js array
