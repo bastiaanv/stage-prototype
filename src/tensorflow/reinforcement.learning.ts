@@ -146,7 +146,7 @@ The lose function is the mean squared error method with the stochastic gradient 
     private modelCompile(): void {
         this.model.compile({
             optimizer: train.sgd(this.learningRate),
-            loss: losses.logLoss
+            loss: losses.hingeLoss
         });
     }
 }
