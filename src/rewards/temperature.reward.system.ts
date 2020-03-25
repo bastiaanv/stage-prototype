@@ -2,9 +2,14 @@ import { RewardSystem } from './reward.system.interface';
 import { FacilicomCoin } from './facilicom.coin';
 
 /*
-    When temperature is between 18 and 20 degrees, return a positive Facilicom coin (Comfort zone)
-    When temperature is between 16 and 20 degrees, return a neutral Facilicom coin (Tolerance zone)
-    When temperature is outside both, return a negative Facilicom coin (bad zone)
+Behavior temperature reward system:
+    When temperature is above 20 degrees and NN was ordering cooling, return a positive Facilicom coin
+    When temperature is aboven 20 degrees and NN was not ordering cooling, return a negative Facilicom coin
+    When temperature is below 16 degrees and NN was ordering heating, return a positive Facilicom coin
+    When temperature is below 16 degrees and NN was not ordering heating, return a negative Facilicom coin
+    When temperature is between 18 and 20 degrees and NN was ordering to do nothing, return a positive Facilicom coin
+    When temperature is between 18 and 20 degrees and NN was not ordering to do nothing, return a negative Facilicom coin
+    When none of the above (temperature between 16 and 18 degrees), return a neutral Facilicom coin
 */
 export class TemperatureRewardSystem implements RewardSystem {
     private readonly rewardFactor = 1;
