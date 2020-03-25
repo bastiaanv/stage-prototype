@@ -2,6 +2,7 @@ import { ReinforcementLearning } from './tensorflow/reinforcement.learning';
 import { createObjectCsvWriter } from 'csv-writer';
 import { writeFileSync } from 'fs';
 import { resolve } from 'path';
+import { backend_util } from '@tensorflow/tfjs-node-gpu';
 
 // Load the reinforcement learning model
 const rl = new ReinforcementLearning(1, 24, 24, 3);
@@ -34,6 +35,11 @@ rl.loadModelFromFile().then(async () => {
     await writer.writeRecords(data);
     console.log('Done writing CSV file!');
 
-    writeFileSync(resolve(__dirname, '..', 'model', 'weights.json'), JSON.stringify(rl.getWeights()));
+    const weights: backend_util.TypedArray[] = [];
+    rl.getWeights().forEach(async (layer) => {
+        weights.push(await layer.read().data());
+    });
+
+    writeFileSync(resolve(__dirname, '..', 'model', 'weights.json'), JSON.stringify(weights));
     console.log('Done writing weights')
 });
