@@ -36,9 +36,9 @@ rl.loadModelFromFile().then(async () => {
     console.log('Done writing CSV file!');
 
     const weights: backend_util.TypedArray[] = [];
-    await rl.getWeights().forEach(async (layer) => {
+    for (const layer of rl.getWeights()) {
         weights.push(await layer.read().data());
-    });
+    };
 
     writeFileSync(resolve(__dirname, '..', 'model', 'weights.json'), JSON.stringify(weights));
     console.log('Done writing weights')
