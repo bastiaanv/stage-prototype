@@ -1,5 +1,7 @@
 import { ReinforcementLearning } from './tensorflow/reinforcement.learning';
 import { createObjectCsvWriter } from 'csv-writer';
+import { writeFileSync } from 'fs';
+import { resolve } from 'path';
 
 // Load the reinforcement learning model
 const rl = new ReinforcementLearning(1, 24, 24, 3);
@@ -30,5 +32,8 @@ rl.loadModelFromFile().then(async () => {
 
     // Write CSV file
     await writer.writeRecords(data);
-    console.log('Done writing CSV file!')
+    console.log('Done writing CSV file!');
+
+    writeFileSync(resolve(__dirname, '..', 'model', 'weights.json'), JSON.stringify(rl.getWeights()));
+    console.log('Done writing weights')
 });

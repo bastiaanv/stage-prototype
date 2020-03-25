@@ -42,6 +42,10 @@ The lose function is the mean squared error method with the stochastic gradient 
         this.modelCompile();
     }
 
+    public getWeights() {
+        return this.model.weights;
+    }
+
     public async loadModelFromFile() {
         this.model = await loadLayersModel(this.pathToModel + '/model.json')
         this.modelCompile();
