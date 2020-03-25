@@ -33,9 +33,9 @@ The lose function is the mean squared error method with the stochastic gradient 
     constructor(countInput: number, countHiddenLayer1: number, countHiddenLayer2: number, countOutput: number) {
         this.model = sequential({
             layers: [
-            layers.dense({inputShape: [countInput], units: countHiddenLayer1, activation: 'softmax'}),
-            layers.dense({inputShape: [countHiddenLayer1], units: countHiddenLayer2, activation: 'softmax'}),
-            layers.dense({units: countOutput, activation: 'softmax'}),
+                layers.dense({inputShape: [countInput], units: countHiddenLayer1, activation: 'softmax', useBias: false}),
+                layers.dense({inputShape: [countHiddenLayer1], units: countHiddenLayer2, activation: 'softmax', useBias: false}),
+                layers.dense({units: countOutput, activation: 'softmax', useBias: false}),
             ]
         });
 
