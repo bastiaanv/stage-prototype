@@ -10,5 +10,31 @@
   "license": "ISC",
   "dependencies": {
     "@tensorflow/tfjs-node-gpu": "^1.7.0"
+  },
+  "devDependencies": {
+    "@istanbuljs/nyc-config-typescript": "^1.0.1",
+    "@types/chai": "^4.2.9",
+    "@types/mocha": "^7.0.2",
+    "@types/node": "^13.9.0",
+    "chai": "^4.2.0",
+    "coveralls": "^3.0.9",
+    "mocha": "^7.1.0",
+    "nyc": "^15.0.0",
+    "ts-node": "^8.6.2",
+    "typescript": "^3.8.2"
+  },
+  "nyc": {
+    "extends": "@istanbuljs/nyc-config-typescript",
+    "all": true,
+    "exclude": [
+      "src/main.ts",
+      "src/model.plot.ts",
+      "src/tensorflow/*",
+      "src/models/*",
+      "src/**/*.interface.ts"
+    ],
+    "include": [
+      "src/*"
+    ]
   }
 }
