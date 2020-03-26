@@ -4,8 +4,8 @@
   "description": "",
   "scripts": {
     "start": "ts-node src/main.ts",
-    "start:node": "node --inspect dist/main.js",
-    "start:plot": "ts-node src/model.plot.ts",
+    "start:node": "node dist/main.js",
+    "start:plot": "node dist/model.plot.ts",
     "build": "rm -rf dist && tsc",
     "test": "nyc --reporter=lcov --reporter=text mocha --require ts-node/register \"test/**/*.spec.ts\" --reporter=nyan"
   },

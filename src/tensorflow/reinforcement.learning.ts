@@ -69,10 +69,9 @@ The lose function is the mean squared error method with the stochastic gradient 
             const wallet = new FacilicomWallet();
             const cps: CyberPhysicalSystem = Object.assign( Object.create( Object.getPrototypeOf(cpsCopy)), cpsCopy);
             cps.start();
-            console.log(`Temperature: ${cps.getCurrentTemp()} degrees celsius`)
 
             for (let batchNr = 0; batchNr < 100; batchNr++) {
-                // The first step is to take a step into time using our CPS (Cyber Physical System). This way, we can train on fresh data/values/states
+                // The first step is to take a step into time using our CPS (Cyber Physical System). This way, we can get the reward from the CPS for the taken action
                 // Get q values from Neural Network
                 const currentTemp: number = this.normalize(cps.getCurrentTemp(), true);
                 const qsa = tidy(() => this.model.predict(tensor([[currentTemp]]))) as Tensor;
@@ -93,8 +92,7 @@ The lose function is the mean squared error method with the stochastic gradient 
                 const coins: FacilicomCoin[] = cps.getReward();
                 wallet.add(coins);
 
-                // Get the new q values with the new state
-                // const maxNewQ = Math.max(...this.float32ArrayToArray(newQ));
+                // update the new q values with the new state
                 currentQ[actions[0]] = this.normalize(wallet.getLastValue(), false);
 
                 // Train model
@@ -110,7 +108,7 @@ The lose function is the mean squared error method with the stochastic gradient 
             }
 
             epsilon = 1/( ( epoch/50 ) + 10 );
-            this.accuracies.push((wallet.getTotalValue() + 100) / (cps.datasetSize + 100) * 100);
+            this.accuracies.push((wallet.getTotalValue() + 100) / 200 * 100);
 
             console.log(`Epoch ${epoch}; Average loss: ${(histories.reduce((a,b) => a + (b.history.loss[0] as number), 0)/histories.length).toFixed(4)}, last loss: ${(histories[histories.length - 1].history.loss[0] as number).toFixed(4)}, average accuracy: ${(this.accuracies.reduce((a, b) => a+ b)/this.accuracies.length).toFixed(1)}%, last accuracy: ${this.accuracies[this.accuracies.length-1].toFixed(1)}%`);
         }
