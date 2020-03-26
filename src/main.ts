@@ -1,6 +1,9 @@
 import * as tf from '@tensorflow/tfjs-node-gpu';
+import { resolve } from 'path';
 
 class NN {
+    private readonly pathToModel = 'file://' + resolve(__dirname, '..', '..', 'model');
+
     private readonly model: tf.LayersModel;
     private readonly nrOfActions: number;
 
@@ -17,6 +20,14 @@ class NN {
             optimizer: tf.train.adam(),
             loss: tf.metrics.categoricalCrossentropy,
         });
+    }
+
+    public async save(): Promise<void> {
+        await this.model.save(this.pathToModel);
+    }
+
+    public predict(temp: number) {
+        return (this.model.predict(tf.tensor([this.normalize(temp)])) as tf.Tensor).data();
     }
 
     public async train(): Promise<void> {
@@ -40,13 +51,6 @@ class NN {
             const actual = await actualTensor.data();
             actual[action] = this.getReward(temp, action);
 
-            if (i > 5990) {
-                console.log(`Temp: ${temp * 60 - 20} degrees`);
-                actualTensor.print();
-                console.log(action)
-                console.log(actual)
-            }
-
             // Train NN
             const label = tf.tensor([actual]);
             await this.model.fit(tempTensor, label, { epochs: 5, verbose: 1 });
@@ -57,16 +61,6 @@ class NN {
 
             // Degrease chance on random action
             epsilon = 1/( ( i/50 ) + 10 );
-        }
-    }
-
-    public predict(temp: number) {
-        return (this.model.predict(tf.tensor([this.normalize(temp)])) as tf.Tensor).data();
-    }
-
-    public printWeights() {
-        for(const layer of this.model.weights) {
-            layer.read().print();
         }
     }
 
@@ -106,7 +100,6 @@ class NN {
     }
 }
 
-// tf.metrics.categoricalAccuracy(tf.tensor([0, 1, 0]), tf.tensor([0, 1, 0])).print();
 const nn = new NN();
 nn.train().then(async () => {
     const values = await Promise.all([
@@ -117,6 +110,8 @@ nn.train().then(async () => {
     console.log(values);
     console.log('Should be:');
     console.log(createShouldArray());
+
+    await nn.save();
 });
 
 function createShouldArray() {
