@@ -22,7 +22,7 @@ class NN {
     public async train(): Promise<void> {
         let epsilon = 0.1;
 
-        for (let i = 0; i < 6000; i++) {
+        for (let i = 0; i < 12000; i++) {
             // Generates a random temperature between 15 and 25 degrees and normalizes it
             const temp = this.normalize(Math.random() * 10 + 15);
             const tempTensor = tf.tensor([temp]);
@@ -39,6 +39,13 @@ class NN {
             // Get reward for NN and update actual array
             const actual = await actualTensor.data();
             actual[action] = this.getReward(temp, action);
+
+            if (i > 5990) {
+                console.log(`Temp: ${temp * 60 - 20} degrees`);
+                actualTensor.print();
+                console.log(action)
+                console.log(actual)
+            }
 
             // Train NN
             const label = tf.tensor([actual]);
@@ -64,8 +71,9 @@ class NN {
     }
 
     private getReward(temp: number, action: number): number {
+        const actualTemp = temp * 60 - 20;
         // Below 16 degrees, positive reward for turning on the heater
-        if (temp < 16) {
+        if (actualTemp < 16) {
             if (action === 1) {
                 return 1
             
@@ -74,7 +82,7 @@ class NN {
             }
         
         // Above 20 degrees, positive reward for turning on the AC
-        } else if (temp > 20) {
+        } else if (actualTemp > 20) {
             if (action === 2) {
                 return 1
             
@@ -107,6 +115,25 @@ nn.train().then(async () => {
         nn.predict(23),
     ])
     console.log(values);
-    console.log('Should be:')
-    console.log([[0,1,0], [1,0,0], [0,0,1]])
+    console.log('Should be:');
+    console.log(createShouldArray());
 });
+
+function createShouldArray() {
+    const shouldBe1 = new Float32Array(3);
+    shouldBe1[0] = 0;
+    shouldBe1[1] = 1;
+    shouldBe1[2] = 0;
+
+    const shouldBe2 = new Float32Array(3);
+    shouldBe2[0] = 1;
+    shouldBe2[1] = 0;
+    shouldBe2[2] = 0;
+
+    const shouldBe3 = new Float32Array(3);
+    shouldBe3[0] = 0;
+    shouldBe3[1] = 0;
+    shouldBe3[2] = 1;
+
+    return [shouldBe1, shouldBe2, shouldBe3];
+}
