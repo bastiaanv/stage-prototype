@@ -57,6 +57,13 @@ describe('Room temperature approach', () => {
             expect(() => cps.step([])).to.throw('Actions does not match nr of actions available');
         });
 
+        it('Should throw exception if randomizeStartPosition function has not been called', () => {
+            const cps = RoomTemperatureApproach.make([], 0, 0, 0, 0);
+
+            // tslint:disable-next-line: no-unused-expression
+            expect(() => cps.step([0,0,0])).to.throw('Start position has not been randomized...');
+        });
+
         it('Should degrees temperature with 0.2 due to passively cooling', () => {
             const startTemp = 19.7;
             const snapshots: Snapshot[] = [
@@ -86,6 +93,7 @@ describe('Room temperature approach', () => {
                 },
             ]
             const cps = RoomTemperatureApproach.make(snapshots, startTemp, 15, 40, 15);
+            cps.start(false);
 
             cps.step([1,0,0]);
             const actual = startTemp - cps.getCurrentTemp();
@@ -123,6 +131,7 @@ describe('Room temperature approach', () => {
                 },
             ]
             const cps = RoomTemperatureApproach.make(snapshots, startTemp, 15, 40, 15);
+            cps.start(false);
 
             cps.step([0,0,1]);
             const actual = startTemp - cps.getCurrentTemp();
@@ -160,6 +169,7 @@ describe('Room temperature approach', () => {
                 },
             ]
             const cps = RoomTemperatureApproach.make(snapshots, startTemp, 15, 40, 15);
+            cps.start(false);
 
             cps.step([0,1,0]);
             const actual = cps.getCurrentTemp() - startTemp;
@@ -197,6 +207,7 @@ describe('Room temperature approach', () => {
                 },
             ]
             const cps = RoomTemperatureApproach.make(snapshots, startTemp, 0, 40, 0);
+            cps.start(false);
 
             cps.step([0,1,0]);
             const actual = cps.getCurrentTemp();
@@ -234,6 +245,7 @@ describe('Room temperature approach', () => {
                 },
             ]
             const cps = RoomTemperatureApproach.make(snapshots, startTemp, 0, 0, 15);
+            cps.start(false);
 
             cps.step([0,0,1]);
             const actual = cps.getCurrentTemp();
@@ -271,6 +283,7 @@ describe('Room temperature approach', () => {
                 },
             ]
             const cps = RoomTemperatureApproach.make(snapshots, startTemp, 15, 0, 0);
+            cps.start(false);
 
             cps.step([1,0,0]);
             const actual = cps.getCurrentTemp();

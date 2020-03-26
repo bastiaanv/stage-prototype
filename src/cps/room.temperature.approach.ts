@@ -18,6 +18,7 @@ export class RoomTemperatureApproach implements CyberPhysicalSystem {
 
     private wasHeating:                     boolean = false;
     private wasCooling:                     boolean = false;
+    private hasStarted:                     boolean = false;
 
     private currentTemp:                    number; // T
     public getCurrentTemp():                number {
@@ -40,6 +41,17 @@ export class RoomTemperatureApproach implements CyberPhysicalSystem {
             new TemperatureRewardSystem(),
         ];
     }
+    public start(shouldRandomize: boolean = true): void {
+        if (this.hasStarted) {
+            throw new Error('Has already started...');
+        }
+
+        if (shouldRandomize) {
+            this.currentTemp = Math.random() * 10 + 15; // Start between 15 and 25 degrees
+        }
+
+        this.hasStarted = true;
+    }
 
     public static make(snapshots: Snapshot[], initTemp: number, outsideTemp: number, heatingTemp: number, coolingTemp: number): CyberPhysicalSystem {
         const deltaPassiveCooling   = Trainer.calculatePassiveCooling(snapshots);
@@ -52,6 +64,9 @@ export class RoomTemperatureApproach implements CyberPhysicalSystem {
     public step(actions: number[]): void {
         if (actions.length !== 3) {
             throw new Error('Actions does not match nr of actions available');
+        }
+        if (!this.hasStarted) {
+            throw new Error('Start position has not been randomized...');
         }
 
         this.wasHeating = actions[1] > 0;

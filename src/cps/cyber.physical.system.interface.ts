@@ -7,4 +7,5 @@ export interface CyberPhysicalSystem {
     getReward(): FacilicomCoin[];
 
     step(actions: number[]): void;
+    start(shouldRandomize?: boolean): void
 }

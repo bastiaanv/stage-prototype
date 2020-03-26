@@ -1,6 +1,7 @@
 import { CyberPhysicalSystem } from '../cps/cyber.physical.system.interface';
 import { FacilicomWallet } from '../rewards/facilicom.wallet';
 import { Tensor, tensor, train, tidy, sequential, layers, History, loadLayersModel, LayersModel, backend_util, losses } from '@tensorflow/tfjs-node-gpu';
+import * as tf from '@tensorflow/tfjs-node-gpu';
 import { FacilicomCoin } from '../rewards/facilicom.coin';
 import { resolve } from 'path';
 
@@ -31,13 +32,11 @@ The lose function is the mean squared error method with the stochastic gradient 
 */
 
     constructor(countInput: number, countHiddenLayer1: number, countHiddenLayer2: number, countOutput: number) {
-        this.model = sequential({
-            layers: [
-                layers.dense({inputShape: [countInput], units: countHiddenLayer1, activation: 'softmax', useBias: false}),
-                layers.dense({inputShape: [countHiddenLayer1], units: countHiddenLayer2, activation: 'softmax', useBias: false}),
-                layers.dense({units: countOutput, activation: 'softmax', useBias: false}),
-            ]
-        });
+        const input = tf.input({shape: [countInput]});
+        const dense1 = tf.layers.dense({units: countHiddenLayer1, activation: 'relu'}).apply(input);
+        const dense2 = tf.layers.dense({units: countHiddenLayer2, activation: 'relu'}).apply(dense1);
+        const dense3 = tf.layers.dense({units: countOutput, activation: 'softmax'}).apply(dense2) as tf.SymbolicTensor;
+        this.model = tf.model({inputs: input, outputs: dense3});
 
         this.modelCompile();
     }
@@ -69,6 +68,7 @@ The lose function is the mean squared error method with the stochastic gradient 
         for (let epoch = 0; epoch < this.numEpochs; epoch++) {
             const wallet = new FacilicomWallet();
             const cps: CyberPhysicalSystem = Object.assign( Object.create( Object.getPrototypeOf(cpsCopy)), cpsCopy);
+            cps.start();
 
             for (let batchNr = 0; batchNr < 100; batchNr++) {
                 // The first step is to take a step into time using our CPS (Cyber Physical System). This way, we can train on fresh data/values/states
@@ -120,7 +120,7 @@ The lose function is the mean squared error method with the stochastic gradient 
             return (x - this.minTemp) / (this.maxTemp - this.minTemp);
         }
 
-        return (x - -1) / 2;
+        return (x + 1) / 2;
     }
 
     // Transform a float32array to a basic js array
@@ -150,8 +150,9 @@ The lose function is the mean squared error method with the stochastic gradient 
 
     private modelCompile(): void {
         this.model.compile({
-            optimizer: train.sgd(this.learningRate),
-            loss: losses.hingeLoss
+            optimizer: tf.train.adam(),
+            metrics: [tf.metrics.categoricalAccuracy],
+            loss: tf.metrics.categoricalCrossentropy,
         });
     }
 }
