@@ -69,6 +69,7 @@ The lose function is the mean squared error method with the stochastic gradient 
             const wallet = new FacilicomWallet();
             const cps: CyberPhysicalSystem = Object.assign( Object.create( Object.getPrototypeOf(cpsCopy)), cpsCopy);
             cps.start();
+            console.log(`Temperature: ${cps.getCurrentTemp()} degrees celsius`)
 
             for (let batchNr = 0; batchNr < 100; batchNr++) {
                 // The first step is to take a step into time using our CPS (Cyber Physical System). This way, we can train on fresh data/values/states
