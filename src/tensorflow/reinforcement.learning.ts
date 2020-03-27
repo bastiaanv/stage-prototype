@@ -1,7 +1,6 @@
 import * as tf from '@tensorflow/tfjs-node-gpu';
 import { resolve } from 'path';
 import { Learning } from './learning.interface';
-import { TemperatureReward } from '../reward/temperature.reward';
 import { Normalization } from '../math/normalization.math';
 import { TemperatureApproach } from '../cps/temperature.approach';
 import { Snapshot } from '../domain/snapshot.model';
@@ -10,7 +9,6 @@ import { CyberPhysicalSystem } from '../cps/cyber.physical.system.interface';
 export class ReinforcementLearning implements Learning {
     private readonly pathToModel = 'file://' + resolve(__dirname, '..', '..', 'model');
 
-    private readonly tempReward = new TemperatureReward();
     private readonly model: tf.LayersModel;
     private readonly nrOfActions: number = 3;
 
