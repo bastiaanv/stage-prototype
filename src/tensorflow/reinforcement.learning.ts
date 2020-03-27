@@ -39,7 +39,7 @@ export class ReinforcementLearning implements Learning {
         const cpsOriginal: CyberPhysicalSystem = TemperatureApproach.make(snapshots, 10, 40, 15);
         let epsilon = 0.1;
 
-        for (let i = 0; i < 120; i++) {
+        for (let i = 0; i < 12000; i++) {
             const cps: CyberPhysicalSystem = Object.assign( Object.create( Object.getPrototypeOf(cpsOriginal)), cpsOriginal);
             cps.randomizeStart();
 
@@ -64,6 +64,11 @@ export class ReinforcementLearning implements Learning {
                 // Get reward for NN and update actual array
                 const actual = await actualTensor.data();
                 actual[action] = cps.getReward();
+
+                console.log(temp);
+                console.log(action);
+                console.log(cps.getReward());
+                console.log(actual);
 
                 // Train NN
                 const label = tf.tensor([actual]);
