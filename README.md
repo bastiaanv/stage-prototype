@@ -14,4 +14,4 @@ npm start
 ```
 
 ## Dependencies
-- Tensorflow v1.2.11, [link](https://www.tensorflow.org/js)
+- Tensorflow v1.7.0, [link](https://www.tensorflow.org/js)
