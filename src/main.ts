@@ -1,8 +1,13 @@
 import { ReinforcementLearning } from './tensorflow/reinforcement.learning';
 import { Learning } from './tensorflow/learning.interface';
+import { DataGenerator } from './data/data.generator';
 
+// Generate data, following a linear form
+const snapshots = DataGenerator.generateLinearData(96);
+
+// Learning
 const nn: Learning = new ReinforcementLearning();
-nn.train().then(async () => {
+nn.train(snapshots).then(async () => {
     const values = await Promise.all([
         nn.predict(15),
         nn.predict(19),
