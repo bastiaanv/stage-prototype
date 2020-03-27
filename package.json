@@ -6,7 +6,7 @@
   "scripts": {
     "start": "ts-node src/main.ts",
     "build": "tsc",
-    "test": "echo 'No tests...'"
+    "test": "nyc --reporter=lcov --reporter=text mocha --require ts-node/register \"test/**/*.spec.ts\" --reporter=nyan"
   },
   "author": "",
   "license": "ISC",
