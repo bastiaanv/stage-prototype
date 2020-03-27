@@ -2,6 +2,7 @@ import * as tf from '@tensorflow/tfjs-node-gpu';
 import { resolve } from 'path';
 import { Learning } from './learning.interface';
 import { TemperatureReward } from '../reward/temperature.reward';
+import { Normalization } from '../math/normalization.math';
 
 export class ReinforcementLearning implements Learning {
     private readonly pathToModel = 'file://' + resolve(__dirname, '..', '..', 'model');
@@ -28,7 +29,7 @@ export class ReinforcementLearning implements Learning {
     }
 
     public predict(temp: number) {
-        return (this.model.predict(tf.tensor([this.normalize(temp)])) as tf.Tensor).data();
+        return (this.model.predict(tf.tensor([Normalization.temperature(temp)])) as tf.Tensor).data();
     }
 
     public async train(): Promise<void> {
@@ -36,7 +37,7 @@ export class ReinforcementLearning implements Learning {
 
         for (let i = 0; i < 12000; i++) {
             // Generates a random temperature between 15 and 25 degrees and normalizes it
-            const temp = this.normalize(Math.random() * 10 + 15);
+            const temp = Normalization.temperature(Math.random() * 10 + 15);
             const tempTensor = tf.tensor([temp]);
 
             // Get the action from the NN
@@ -66,9 +67,5 @@ export class ReinforcementLearning implements Learning {
             // Degrease chance on random action
             epsilon = 1/( ( i/50 ) + 10 );
         }
-    }
-
-    private normalize(x: number): number {
-        return (x + 20) / 60;
     }
 }

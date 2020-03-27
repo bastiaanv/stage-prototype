@@ -1,6 +1,7 @@
 import * as tf from '@tensorflow/tfjs-node-gpu';
 import { resolve } from 'path';
 import { Learning } from './learning.interface';
+import { Normalization } from '../math/normalization.math';
 
 export class SupervisedLearning implements Learning {
     private readonly pathToModel = 'file://' + resolve(__dirname, '..', '..', 'model');
@@ -21,7 +22,7 @@ export class SupervisedLearning implements Learning {
     }
 
     public predict(temp: number): Promise<tf.backend_util.TypedArray> {
-        return (this.model.predict(tf.tensor([this.normalize(temp)])) as tf.Tensor).data();
+        return (this.model.predict(tf.tensor([Normalization.temperature(temp)])) as tf.Tensor).data();
     }
 
     public async save(): Promise<void> {
@@ -39,15 +40,11 @@ export class SupervisedLearning implements Learning {
         const dataset: {xs: tf.Tensor, ys: tf.Tensor}[] = [];
         for (let temperature = 12; temperature < 24; temperature += 0.1) {
             dataset.push({
-                xs: tf.tensor([this.normalize(temperature)]),
+                xs: tf.tensor([Normalization.temperature(temperature)]),
                 ys: tf.tensor([temperature > 16 && temperature < 20 ? 1 : 0, temperature < 16 ? 1 : 0, temperature > 20 ? 1 : 0])
             });
         }
 
         return tf.data.array(dataset).repeat(3).shuffle(120, undefined, true).batch(60);
-    }
-
-    private normalize(x: number): number {
-        return (x + 20) / 60;
     }
 }
