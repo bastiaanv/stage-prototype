@@ -65,11 +65,6 @@ export class ReinforcementLearning implements Learning {
                 const actual = await actualTensor.data();
                 actual[action] = cps.getReward();
 
-                console.log(temp);
-                console.log(action);
-                console.log(cps.getReward());
-                console.log(actual);
-
                 // Train NN
                 const label = tf.tensor([actual]);
                 await this.model.fit(tempTensor, label, { epochs: 5, verbose: 1 });
