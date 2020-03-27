@@ -1,4 +1,4 @@
-import { Snapshot } from '../models/snapshot.model';
+import { Snapshot } from '../domain/snapshot.model';
 import { Chainsaw } from './formulas/chainsaw.formula';
 
 export class DataGenerator {

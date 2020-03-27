@@ -1,157 +1,83 @@
-import { CyberPhysicalSystem } from '../cps/cyber.physical.system.interface';
-import { FacilicomWallet } from '../rewards/facilicom.wallet';
-import { Tensor, tensor, train, tidy, sequential, layers, History, loadLayersModel, LayersModel, backend_util, losses } from '@tensorflow/tfjs-node-gpu';
 import * as tf from '@tensorflow/tfjs-node-gpu';
-import { FacilicomCoin } from '../rewards/facilicom.coin';
 import { resolve } from 'path';
+import { Learning } from './learning.interface';
+import { TemperatureReward } from '../reward/temperature.reward';
+import { Normalization } from '../math/normalization.math';
+import { TemperatureApproach } from '../cps/temperature.approach';
+import { Snapshot } from '../domain/snapshot.model';
+import { CyberPhysicalSystem } from '../cps/cyber.physical.system.interface';
 
-export class ReinforcementLearning {
-
+export class ReinforcementLearning implements Learning {
     private readonly pathToModel = 'file://' + resolve(__dirname, '..', '..', 'model');
-    private readonly accuracies: number[] = [];
 
-    // Normalization options
-    private readonly minTemp = -20;
-    private readonly maxTemp = 40;
+    private readonly tempReward = new TemperatureReward();
+    private readonly model: tf.LayersModel;
+    private readonly nrOfActions: number = 3;
 
-    // Hyper parameters
-    private readonly discount = 0.6;
-    private readonly learningRate = 0.1;
-    private readonly numEpochs = 600;
-
-    // Neural network
-    private model: LayersModel;
-
-/*
-Neural network model:
-        Input                   Hidden layer 1                  Hidden layer 2                      Output
-    (countInput neurons) ->   (countHiddenLayer1 neurons)  ->  (countHiddenLayer2 neurons)   ->  (countOutput neuron)
-
-This model is trained via a reinforcement learning algorithm and uses the relu and softmax activation function.
-The lose function is the mean squared error method with the stochastic gradient descent optimizer as our learning partner.
-*/
-
-    constructor(countInput: number, countHiddenLayer1: number, countHiddenLayer2: number, countOutput: number) {
-        const input = tf.input({shape: [countInput]});
-        const dense1 = tf.layers.dense({units: countHiddenLayer1, activation: 'relu'}).apply(input);
-        const dense2 = tf.layers.dense({units: countHiddenLayer2, activation: 'relu'}).apply(dense1);
-        const dense3 = tf.layers.dense({units: countOutput, activation: 'softmax'}).apply(dense2) as tf.SymbolicTensor;
+    constructor() {
+        const input = tf.input({shape: [1]});
+        const dense1 = tf.layers.dense({units: 10, activation: 'relu'}).apply(input);
+        const dense2 = tf.layers.dense({units: 10, activation: 'relu'}).apply(dense1);
+        const dense3 = tf.layers.dense({units: this.nrOfActions, activation: 'softmax'}).apply(dense2) as tf.SymbolicTensor;
         this.model = tf.model({inputs: input, outputs: dense3});
 
-        this.modelCompile();
+        this.model.compile({
+            optimizer: tf.train.adam(),
+            loss: tf.metrics.categoricalCrossentropy,
+        });
     }
 
-    public getWeights() {
-        return this.model.weights;
-    }
-
-    public async loadModelFromFile() {
-        this.model = await loadLayersModel(this.pathToModel + '/model.json')
-        this.modelCompile();
-    }
-
-    public async saveToFile(): Promise<void> {
+    public async save(): Promise<void> {
         await this.model.save(this.pathToModel);
     }
 
-    public predict(temp: number): Promise<backend_util.TypedArray> {
-        const currentTemp: number = this.normalize(temp, true);
-        const qsa = tidy(() => this.model.predict(tensor([[currentTemp]]))) as Tensor;
-
-        return qsa.argMax(1).data();
+    public predict(temp: number) {
+        return (this.model.predict(tf.tensor([Normalization.temperature(temp)])) as tf.Tensor).data();
     }
 
-    public async train(cpsCopy: CyberPhysicalSystem) {
+    public async train(snapshots: Snapshot[]): Promise<void> {
+        const cpsOriginal: CyberPhysicalSystem = TemperatureApproach.make(snapshots, 10, 40, 15);
         let epsilon = 0.1;
-        const histories: History[] = [];
 
-        for (let epoch = 0; epoch < this.numEpochs; epoch++) {
-            const wallet = new FacilicomWallet();
-            const cps: CyberPhysicalSystem = Object.assign( Object.create( Object.getPrototypeOf(cpsCopy)), cpsCopy);
-            cps.start();
+        for (let i = 0; i < 120; i++) {
+            const cps: CyberPhysicalSystem = Object.assign( Object.create( Object.getPrototypeOf(cpsOriginal)), cpsOriginal);
+            cps.randomizeStart();
 
-            for (let batchNr = 0; batchNr < 100; batchNr++) {
-                // The first step is to take a step into time using our CPS (Cyber Physical System). This way, we can get the reward from the CPS for the taken action
-                // Get q values from Neural Network
-                const currentTemp: number = this.normalize(cps.getCurrentTemp(), true);
-                const qsa = tidy(() => this.model.predict(tensor([[currentTemp]]))) as Tensor;
-                const action = qsa.argMax(1);
+            for (let j = 0; j < 100; j++) {
+                // Generates a random temperature between 15 and 25 degrees and normalizes it
+                const temp = Normalization.temperature(cps.getCurrentTemp());
+                const tempTensor = tf.tensor([temp]);
 
-                const [currentQ, actions] = await Promise.all([ qsa.data(), action.data() ]);
+                // Get the action from the NN
+                const actualTensor = tf.tidy(() => this.model.predict(tempTensor) as tf.Tensor);
+                const actionTensor = tf.tidy(() => actualTensor.argMax(1));
+                let action = (await actionTensor.data())[0];
 
                 // If true, then perform random action instead of action that would be taken by the Neural Network
                 if (Math.random() < epsilon) {
-                    actions[0] = Math.round(Math.random() * currentQ.length);
+                    action = Math.round(Math.random() * this.nrOfActions);
                 }
 
-                // Take action
-                cps.step(this.actionToActionArray(actions[0], currentQ.length));
+                // Set step into time
+                cps.step(action);
 
-                // Now we can start training the Neural Network, since we have taken the next step in time
-                // Get and save reward (Facilicom coins) to Facilicom wallet
-                const coins: FacilicomCoin[] = cps.getReward();
-                wallet.add(coins);
+                // Get reward for NN and update actual array
+                const actual = await actualTensor.data();
+                actual[action] = cps.getReward();
 
-                // update the new q values with the new state
-                currentQ[actions[0]] = this.normalize(wallet.getLastValue(), false);
+                // Train NN
+                const label = tf.tensor([actual]);
+                await this.model.fit(tempTensor, label, { epochs: 5, verbose: 1 });
 
-                // Train model
-                const target = tensor([currentQ]);
-                const label = tensor([[currentTemp]]);
-                histories.push(await this.model.fit(label, target, {verbose: 0}));
-
-                // Cleanup tensors to prevent memory leak
+                // Dispose remaining tensors
+                tempTensor.dispose();
                 label.dispose();
-                qsa.dispose();
-                action.dispose();
-                target.dispose();
+                actualTensor.dispose();
+                actionTensor.dispose();
             }
 
-            epsilon = 1/( ( epoch/50 ) + 10 );
-            this.accuracies.push((wallet.getTotalValue() + 100) / 200 * 100);
-
-            console.log(`Epoch ${epoch}; Average loss: ${(histories.reduce((a,b) => a + (b.history.loss[0] as number), 0)/histories.length).toFixed(4)}, last loss: ${(histories[histories.length - 1].history.loss[0] as number).toFixed(4)}, average accuracy: ${(this.accuracies.reduce((a, b) => a+ b)/this.accuracies.length).toFixed(1)}%, last accuracy: ${this.accuracies[this.accuracies.length-1].toFixed(1)}%`);
+            // Degrease chance on random action
+            epsilon = 1/( ( i/50 ) + 10 );
         }
-    }
-
-    private normalize(x: number, isTemp: boolean): number {
-        if (isTemp) {
-            return (x - this.minTemp) / (this.maxTemp - this.minTemp);
-        }
-
-        return (x + 1) / 2;
-    }
-
-    // Transform a float32array to a basic js array
-    private float32ArrayToArray(array: backend_util.TypedArray): number[] {
-        const output: number[] = [];
-        for (const item of array) {
-            output.push(item);
-        }
-
-        return output;
-    }
-
-    // Creates an array which can be accepted by the CPS to preform actions
-    private actionToActionArray(index: number, length: number): number[] {
-        const output: number[] = [];
-        for (let i = 0; i < length; i++) {
-            if (i === index) {
-                output.push(1);
-
-            } else {
-                output.push(0);
-            }
-        }
-
-        return output;
-    }
-
-    private modelCompile(): void {
-        this.model.compile({
-            optimizer: tf.train.adam(),
-            metrics: [tf.metrics.categoricalAccuracy],
-            loss: tf.metrics.categoricalCrossentropy,
-        });
     }
 }

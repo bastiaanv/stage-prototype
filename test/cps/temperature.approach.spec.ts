@@ -1,13 +1,12 @@
 import 'mocha';
 import { expect } from 'chai';
-import { RoomTemperatureApproach } from '../../src/cps/room.temperature.approach';
-import { FacilicomCoin } from '../../src/rewards/facilicom.coin';
-import { Snapshot } from '../../src/models/snapshot.model';
+import { TemperatureApproach } from '../../src/cps/temperature.approach';
+import { Snapshot } from '../../src/domain/snapshot.model';
 
 describe('Room temperature approach', () => {
     describe('make(snapshots, initTemp, outsideTemp, heatingTemp, coolingTemp)', () => {
         it('Should make a CPS-like class', () => {
-            const actual = RoomTemperatureApproach.make([], 0, 0, 0, 0);
+            const actual = TemperatureApproach.make([], 0, 0, 0, 0);
 
             // tslint:disable-next-line: no-unused-expression
             expect(actual).to.be.not.undefined
@@ -15,53 +14,31 @@ describe('Room temperature approach', () => {
     });
 
     describe('getReward()', () => {
-        it('Should give a positive reward, because them is between 18 and 20', () => {
-            const cps = RoomTemperatureApproach.make([], 19.5, 0, 0, 0);
+        it('Should give a positive reward, because temp is between 16 and 20 and lastAction is "Do nothing"', () => {
+            const cps = TemperatureApproach.make([], 0, 0, 0, 19.5);
 
             const actual = cps.getReward();
-            const expected: FacilicomCoin[] = [
-                new FacilicomCoin(1)
-            ];
+            const expected = 1;
 
-            expect(actual).to.be.deep.equal(expected);
+            expect(actual).to.equal(expected);
         });
 
-        it('Should give a neutral reward, because them is between 16 and 18', () => {
-            const cps = RoomTemperatureApproach.make([], 17.5, 0, 0, 0);
+        it('Should give a negative reward, because temp outside 18 and 20 and lastAction is "Do nothing"', () => {
+            const cps = TemperatureApproach.make([], 0, 0, 0, 23.5);
 
             const actual = cps.getReward();
-            const expected: FacilicomCoin[] = [
-                new FacilicomCoin(0)
-            ];
+            const expected = 0
 
-            expect(actual).to.be.deep.equal(expected);
-        });
-
-        it('Should give a negative reward, because them is between 18 and 20', () => {
-            const cps = RoomTemperatureApproach.make([], 23.5, 0, 0, 0);
-
-            const actual = cps.getReward();
-            const expected: FacilicomCoin[] = [
-                new FacilicomCoin(-1)
-            ];
-
-            expect(actual).to.be.deep.equal(expected);
+            expect(actual).to.equal(expected);
         });
     });
 
     describe('step(actions)', () => {
         it('Should throw exception if actions parameters does not match nr of actions in the system', () => {
-            const cps = RoomTemperatureApproach.make([], 0, 0, 0, 0);
+            const cps = TemperatureApproach.make([], 0, 0, 0);
 
             // tslint:disable-next-line: no-unused-expression
-            expect(() => cps.step([])).to.throw('Actions does not match nr of actions available');
-        });
-
-        it('Should throw exception if randomizeStartPosition function has not been called', () => {
-            const cps = RoomTemperatureApproach.make([], 0, 0, 0, 0);
-
-            // tslint:disable-next-line: no-unused-expression
-            expect(() => cps.step([0,0,0])).to.throw('Start position has not been randomized...');
+            expect(() => cps.step(4)).to.throw('Action does not match actions available');
         });
 
         it('Should degrees temperature with 0.2 due to passively cooling', () => {
@@ -92,10 +69,9 @@ describe('Room temperature approach', () => {
                     coolingPercentage: 0,
                 },
             ]
-            const cps = RoomTemperatureApproach.make(snapshots, startTemp, 15, 40, 15);
-            cps.start(false);
+            const cps = TemperatureApproach.make(snapshots, 15, 40, 15, startTemp);
 
-            cps.step([1,0,0]);
+            cps.step(0);
             const actual = startTemp - cps.getCurrentTemp();
             const expected = 0.2;
 
@@ -130,10 +106,9 @@ describe('Room temperature approach', () => {
                     coolingPercentage: 1,
                 },
             ]
-            const cps = RoomTemperatureApproach.make(snapshots, startTemp, 15, 40, 15);
-            cps.start(false);
+            const cps = TemperatureApproach.make(snapshots, 15, 40, 15, startTemp);
 
-            cps.step([0,0,1]);
+            cps.step(2);
             const actual = startTemp - cps.getCurrentTemp();
             const expected = 0.2;
 
@@ -168,10 +143,9 @@ describe('Room temperature approach', () => {
                     coolingPercentage: 0,
                 },
             ]
-            const cps = RoomTemperatureApproach.make(snapshots, startTemp, 15, 40, 15);
-            cps.start(false);
+            const cps = TemperatureApproach.make(snapshots, 15, 40, 15, startTemp);
 
-            cps.step([0,1,0]);
+            cps.step(1);
             const actual = cps.getCurrentTemp() - startTemp;
             const expected = 0.2;
 
@@ -206,10 +180,9 @@ describe('Room temperature approach', () => {
                     coolingPercentage: 0,
                 },
             ]
-            const cps = RoomTemperatureApproach.make(snapshots, startTemp, 0, 40, 0);
-            cps.start(false);
+            const cps = TemperatureApproach.make(snapshots, 15, 40, 15, startTemp);
 
-            cps.step([0,1,0]);
+            cps.step(1);
             const actual = cps.getCurrentTemp();
             const expected = 40;
 
@@ -244,10 +217,9 @@ describe('Room temperature approach', () => {
                     coolingPercentage: 1,
                 },
             ]
-            const cps = RoomTemperatureApproach.make(snapshots, startTemp, 0, 0, 15);
-            cps.start(false);
+            const cps = TemperatureApproach.make(snapshots, 15, 40, 15, startTemp);
 
-            cps.step([0,0,1]);
+            cps.step(2);
             const actual = cps.getCurrentTemp();
             const expected = 15;
 
@@ -282,14 +254,23 @@ describe('Room temperature approach', () => {
                     coolingPercentage: 0,
                 },
             ]
-            const cps = RoomTemperatureApproach.make(snapshots, startTemp, 15, 0, 0);
-            cps.start(false);
+            const cps = TemperatureApproach.make(snapshots, 15, 40, 15, startTemp);
 
-            cps.step([1,0,0]);
+            cps.step(0);
             const actual = cps.getCurrentTemp();
             const expected = 15;
 
             expect(actual).to.be.equal(expected);
+        });
+    });
+
+    describe('RandomizeStart()', () => {
+        it('Should generate a random starting tempature', () => {
+            const startTemp = 19;
+            const cps = TemperatureApproach.make([], 15, 40, 15, startTemp);
+            cps.randomizeStart();
+
+            expect(cps.getCurrentTemp()).to.not.equal(startTemp);
         });
     });
 });

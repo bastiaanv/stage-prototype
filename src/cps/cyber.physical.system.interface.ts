@@ -1,11 +1,7 @@
-import { FacilicomCoin } from '../rewards/facilicom.coin';
-
 export interface CyberPhysicalSystem {
-    readonly datasetSize: number;
-
     getCurrentTemp(): number;
-    getReward(): FacilicomCoin[];
+    getReward(): number;
 
-    step(actions: number[]): void;
-    start(shouldRandomize?: boolean): void
+    step(action: number): void;
+    randomizeStart(): void;
 }

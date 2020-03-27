@@ -1,4 +1,4 @@
-import { Snapshot } from '../models/snapshot.model';
+import { Snapshot } from '../domain/snapshot.model';
 
 export class Trainer {
     public static calculatePassiveCooling(snapshots: Snapshot[]): number {

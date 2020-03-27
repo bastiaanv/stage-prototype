@@ -1,7 +1,7 @@
 import 'mocha';
 import { expect } from 'chai';
 import { DataGenerator } from '../../src/data/data.generator';
-import { Snapshot } from '../../src/models/snapshot.model';
+import { Snapshot } from '../../src/domain/snapshot.model';
 
 describe('Data generator', () => {
     describe('generateLinearData(countQuarters)', () => {

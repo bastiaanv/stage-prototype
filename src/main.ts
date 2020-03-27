@@ -1,30 +1,40 @@
-import { DataGenerator } from './data/data.generator';
-import { RoomTemperatureApproach } from './cps/room.temperature.approach';
 import { ReinforcementLearning } from './tensorflow/reinforcement.learning';
-import { CyberPhysicalSystem } from './cps/cyber.physical.system.interface';
-import * as fs from 'fs';
-import * as util from 'util';
-
-// Reset log file
-fs.writeFileSync(__dirname + '/../debug.log', '');
-
-// remap console.log in order to write every console.log to a file and print to console
-console.log = (d: any) => {
-    fs.appendFileSync(__dirname + '/../debug.log', util.format(d) + '\n')
-    process.stdout.write(util.format(d) + '\n');
-};
+import { Learning } from './tensorflow/learning.interface';
+import { DataGenerator } from './data/data.generator';
 
 // Generate data, following a linear form
 const snapshots = DataGenerator.generateLinearData(96);
 
-// Generate a Cyber Physical System for the Reinforcement learning to train in
-const cps: CyberPhysicalSystem = RoomTemperatureApproach.make(snapshots, 20, 12, 40, 10);
+// Learning
+const nn: Learning = new ReinforcementLearning();
+nn.train(snapshots).then(async () => {
+    const values = await Promise.all([
+        nn.predict(15),
+        nn.predict(19),
+        nn.predict(23),
+    ])
+    console.log(values);
+    console.log('Should be:');
+    console.log(createShouldArray());
 
-// Create the reinforcement learning model and train it
-const rl = new ReinforcementLearning(1, 10, 10, 3);
-// rl.loadModelFromFile().then(() => {
-rl.train(cps);
-// });
+    await nn.save();
+});
 
-// Save model when done training
-rl.saveToFile();
+function createShouldArray() {
+    const shouldBe1 = new Float32Array(3);
+    shouldBe1[0] = 0;
+    shouldBe1[1] = 1;
+    shouldBe1[2] = 0;
+
+    const shouldBe2 = new Float32Array(3);
+    shouldBe2[0] = 1;
+    shouldBe2[1] = 0;
+    shouldBe2[2] = 0;
+
+    const shouldBe3 = new Float32Array(3);
+    shouldBe3[0] = 0;
+    shouldBe3[1] = 0;
+    shouldBe3[2] = 1;
+
+    return [shouldBe1, shouldBe2, shouldBe3];
+}
