@@ -37,12 +37,12 @@ export class TemperatureApproach implements CyberPhysicalSystem {
         ];
     }
 
-    public static make(snapshots: Snapshot[], outsideTemp: number, heatingTemp: number, coolingTemp: number): CyberPhysicalSystem {
+    public static make(snapshots: Snapshot[], outsideTemp: number, heatingTemp: number, coolingTemp: number, initTemp?: number): CyberPhysicalSystem {
         const deltaPassiveCooling   = Trainer.calculatePassiveCooling(snapshots);
         const deltaActiveHeating    = Trainer.calculateActiveHeating(snapshots);
         const deltaActiveCooling    = Trainer.calculateActiveCooling(snapshots);
 
-        return new TemperatureApproach(deltaPassiveCooling, outsideTemp, deltaActiveHeating, deltaActiveCooling, (Math.random() * 10 + 15), heatingTemp, coolingTemp);
+        return new TemperatureApproach(deltaPassiveCooling, outsideTemp, deltaActiveHeating, deltaActiveCooling, !!initTemp ? initTemp : (Math.random() * 10 + 15), heatingTemp, coolingTemp);
     }
 
     public step(action: number): void {

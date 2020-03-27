@@ -22,4 +22,33 @@ describe('Normalization', () => {
             expect(actual).to.approximately(expected, 4);
         });
     });
+
+    describe('reward(reward, max)', () => {
+        it('Should return 1 for a maximum reward', () => {
+            const reward = 1;
+
+            const actual = Normalization.reward(reward, 1);
+            const expected = 1;
+
+            expect(actual).to.approximately(expected, 4);
+        });
+
+        it('Should return 0 for a none reward', () => {
+            const reward = 0;
+
+            const actual = Normalization.reward(reward, 1);
+            const expected = 0;
+
+            expect(actual).to.approximately(expected, 4);
+        });
+
+        it('Should return 0.33 for a 1/3 reward', () => {
+            const reward = 1;
+
+            const actual = Normalization.reward(reward, 3);
+            const expected = 0.3333;
+
+            expect(actual).to.approximately(expected, 4);
+        });
+    });
 });

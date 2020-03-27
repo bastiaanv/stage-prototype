@@ -32,7 +32,7 @@
       "src/main.ts",
       "src/model.plot.ts",
       "src/tensorflow/*",
-      "src/models/*",
+      "src/domain/*",
       "src/**/*.interface.ts"
     ],
     "include": [
