@@ -5,20 +5,19 @@ import { Normalization } from '../math/normalization.math';
 import { TemperatureApproach } from '../cps/temperature.approach';
 import { Snapshot } from '../domain/snapshot.model';
 import { CyberPhysicalSystem } from '../cps/cyber.physical.system.interface';
-import { LSTMMemory } from './lstm.memory';
 
 export class ReinforcementLearning implements Learning {
     private readonly pathToModel = 'file://' + resolve(__dirname, '..', '..', 'model');
 
     private readonly model: tf.LayersModel;
     private readonly nrOfActions: number = 3;
-    private readonly memory = new LSTMMemory();
 
     constructor() {
-        const input = tf.input({shape: [10, 1], name: 'Input_layer'});
-        const ltsm = tf.layers.lstm({units: 8, returnSequences: false, name: 'Hidden_LSTM_layer_1'}).apply(input);
-        const output = tf.layers.dense({units: this.nrOfActions, activation: 'softmax', name: 'Output_layer'}).apply(ltsm) as tf.SymbolicTensor;
-        this.model = tf.model({inputs: input, outputs: output});
+        const input = tf.input({shape: [1]});
+        const dense1 = tf.layers.dense({units: 10, activation: 'relu'}).apply(input);
+        const dense2 = tf.layers.dense({units: 10, activation: 'relu'}).apply(dense1);
+        const dense3 = tf.layers.dense({units: this.nrOfActions, activation: 'softmax'}).apply(dense2) as tf.SymbolicTensor;
+        this.model = tf.model({inputs: input, outputs: dense3});
 
         this.model.compile({
             optimizer: tf.train.adam(),
@@ -31,30 +30,21 @@ export class ReinforcementLearning implements Learning {
     }
 
     public predict(temp: number) {
-        const input = [[
-            ...this.memory.get(9),
-            [Normalization.temperature(temp)],
-        ]];
-
-        return (this.model.predict(tf.tensor(input)) as tf.Tensor).data();
+        return (this.model.predict(tf.tensor([Normalization.temperature(temp)])) as tf.Tensor).data();
     }
 
     public async train(snapshots: Snapshot[]): Promise<void> {
         const cpsOriginal: CyberPhysicalSystem = TemperatureApproach.make(snapshots, 10, 40, 15);
         let epsilon = 0.1;
 
-        for (let i = 0; i < 1; i++) {
+        for (let i = 0; i < 12000; i++) {
             const cps: CyberPhysicalSystem = Object.assign( Object.create( Object.getPrototypeOf(cpsOriginal)), cpsOriginal);
             cps.randomizeStart();
-            this.memory.clear();
 
             for (let j = 0; j < 100; j++) {
                 // Generates a random temperature between 15 and 25 degrees and normalizes it
                 const temp = Normalization.temperature(cps.getCurrentTemp());
-                const tempTensor = tf.tensor([[
-                    ...this.memory.get(9),
-                    [Normalization.temperature(temp)],
-                ]]);
+                const tempTensor = tf.tensor([temp]);
 
                 // Get the action from the NN
                 const actualTensor = tf.tidy(() => this.model.predict(tempTensor) as tf.Tensor);
