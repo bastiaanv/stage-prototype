@@ -2,6 +2,7 @@ import * as tf from '@tensorflow/tfjs-node-gpu';
 import { resolve } from 'path';
 import { Learning } from './learning.interface';
 import { Normalization } from '../math/normalization.math';
+import { Snapshot } from '../domain/snapshot.model';
 
 export class SupervisedLearning implements Learning {
     private readonly pathToModel = 'file://' + resolve(__dirname, '..', '..', 'model');
@@ -29,7 +30,7 @@ export class SupervisedLearning implements Learning {
         await this.model.save(this.pathToModel);
     }
 
-    public async train(): Promise<void> {
+    public async train(snapshots: Snapshot[]): Promise<void> {
         await this.model.fitDataset(
             this.generateDataAndLabels(),
             { epochs: 600, verbose: 1 }

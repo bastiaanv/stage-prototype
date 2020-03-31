@@ -7,14 +7,7 @@ import { RewardSystem } from './reward.interface';
 */
 
 export class TemperatureReward implements RewardSystem {
-    getReward(temp: number, action: number): number {
-        if (temp < 16 && action === 1 ||
-            temp > 20 && action === 2 ||
-            temp >= 16 && temp <= 20 && action === 0) {
-
-            return 1;
-        } else {
-            return 0;
-        }
+    getReward(temp: number): number {
+        return temp > 16 && temp <= 20 ? 1 : 0;
     }
 }
