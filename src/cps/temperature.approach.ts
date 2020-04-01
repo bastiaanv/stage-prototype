@@ -2,35 +2,39 @@ import { TemperatureReward } from '../reward/temperature.reward';
 import { Snapshot } from '../domain/snapshot.model';
 import { Normalization } from '../math/normalization.math';
 import { Trainer } from '../math/trainer.math';
+import { RewardSystem } from '../reward/reward.interface';
+import { ControlReward } from '../reward/control.reward';
 
 // Formula: Tdot = T - a + Uh * (Tdh + a) + Uc * (Tdc + a)
 export class TemperatureApproach {
-    private readonly deltaPasiveCooling:    number; // a
-    private readonly deltaActiveHeating:    number; // Tdh
-    private readonly deltaActiveCooling:    number; // Tdc
-    private readonly heatingTemperature:    number; // Tmaxh
-    private readonly coolingTemperature:    number; // Tminc
-    private readonly outsideTemp:           number; // Tminp
+    private readonly deltaPasiveCooling:    number;     // a
+    private readonly deltaActiveHeating:    number;     // Tdh
+    private readonly deltaActiveCooling:    number;     // Tdc
+    private readonly heatingTemperature:    number;     // Tmaxh
+    private readonly coolingTemperature:    number;     // Tminc
+    private readonly outsideTemp:           number;     // Tminp
 
-    private readonly rewardSystem:         TemperatureReward;
-
-    private lastAction:                     number = 0;
-
-    private currentTemp:                    number; // T
+    private currentTemp:                    number = 0; // T
     public getCurrentTemp():                number {
         return this.currentTemp;
     }
 
-    private constructor(deltaPasiveCooling: number, outsideTemp: number, deltaActiveHeating: number, deltaActiveCooling: number, initTemp: number, heatingTemp: number, coolingTemp: number) {
+    private lastAction:                     number = 0;
+
+    private readonly rewardSystems:         RewardSystem[];
+
+    private constructor(deltaPasiveCooling: number, outsideTemp: number, deltaActiveHeating: number, deltaActiveCooling: number, heatingTemp: number, coolingTemp: number) {
         this.deltaPasiveCooling = deltaPasiveCooling;
         this.outsideTemp        = outsideTemp;
         this.deltaActiveHeating = deltaActiveHeating;
         this.deltaActiveCooling = deltaActiveCooling;
-        this.currentTemp        = initTemp;
         this.heatingTemperature = heatingTemp;
         this.coolingTemperature = coolingTemp;
 
-        this.rewardSystem = new TemperatureReward();
+        this.rewardSystems = [
+            new TemperatureReward(),
+            new ControlReward(),
+        ];
     }
 
     public static make(snapshots: Snapshot[], outsideTemp: number, heatingTemp: number, coolingTemp: number): TemperatureApproach {
@@ -38,7 +42,7 @@ export class TemperatureApproach {
         const deltaActiveHeating    = Trainer.calculateActiveHeating(snapshots);
         const deltaActiveCooling    = Trainer.calculateActiveCooling(snapshots);
 
-        return new TemperatureApproach(deltaPassiveCooling, outsideTemp, deltaActiveHeating, deltaActiveCooling, (Math.random() * 10 + 15), heatingTemp, coolingTemp);
+        return new TemperatureApproach(deltaPassiveCooling, outsideTemp, deltaActiveHeating, deltaActiveCooling, heatingTemp, coolingTemp);
     }
 
     public step(action: number): void {
@@ -63,7 +67,17 @@ export class TemperatureApproach {
     }
 
     public getReward(): number {
-        return Normalization.reward(this.rewardSystem.getReward(this.currentTemp), 1);
+        let reward = 0;
+        for (const rewardSystem of this.rewardSystems) {
+            if (rewardSystem instanceof TemperatureReward) {
+                reward += rewardSystem.getReward(this.getCurrentTemp());
+
+            } else if (rewardSystem instanceof ControlReward) {
+                reward += rewardSystem.getReward(this.lastAction);
+            }
+        }
+
+        return Normalization.reward(reward, this.rewardSystems.length);
     }
 
     public randomizeStart(): void {

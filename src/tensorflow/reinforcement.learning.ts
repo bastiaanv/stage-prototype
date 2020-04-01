@@ -37,7 +37,7 @@ export class ReinforcementLearning implements Learning {
         let epsilon = 0.1;
 
         for (let i = 0; i < 12000; i++) {
-            const cps: TemperatureApproach = Object.assign( Object.create( Object.getPrototypeOf(cpsOriginal)), cpsOriginal);
+            const cps: TemperatureApproach = Object.assign( Object.create( Object.getPrototypeOf(cpsOriginal) ), cpsOriginal );
             cps.randomizeStart();
 
             // Generates a random temperature between 15 and 25 degrees and normalizes it
@@ -57,10 +57,8 @@ export class ReinforcementLearning implements Learning {
                 actions[0] = Math.round(Math.random() * this.nrOfActions);
             }
 
-            // Do action
+            // Do action and get reward for NN and update actual array
             cps.step(actions[0]);
-
-            // Get reward for NN and update actual array
             actual[actions[0]] = cps.getReward();
 
             // Train NN
