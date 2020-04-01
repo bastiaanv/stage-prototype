@@ -1,8 +1,7 @@
-import { TemperatureReward } from '../reward/temperature.reward';
 import { Snapshot } from '../domain/snapshot.model';
 import { Normalization } from '../math/normalization.math';
 import { Trainer } from '../math/trainer.math';
-import { ControlReward } from '../reward/control.reward';
+import { RewardSystem } from '../reward/reward.system';
 
 // Formula: Tdot = T - a + Uh * (Tdh + a) + Uc * (Tdc + a)
 export class TemperatureApproach {
@@ -20,9 +19,10 @@ export class TemperatureApproach {
 
     private lastAction:                     number = 0;
     private lastTemperature:                number = 0;
+    private currentDate:                    Date = new Date();
 
-    private readonly rewardSystemTemperature =  new TemperatureReward();
-    private readonly rewardSystemControl =      new ControlReward();
+    // private readonly rewardSystemTemperature =  new TemperatureReward();
+    private readonly rewardSystemControl =      new RewardSystem();
 
     private constructor(deltaPasiveCooling: number, outsideTemp: number, deltaActiveHeating: number, deltaActiveCooling: number, heatingTemp: number, coolingTemp: number) {
         this.deltaPasiveCooling = deltaPasiveCooling;
@@ -70,7 +70,7 @@ export class TemperatureApproach {
         // reward += this.rewardSystemTemperature.getReward(this.currentTemp);
 
         // Give reward for action taken upon previous temperature
-        reward += this.rewardSystemControl.getReward(this.lastTemperature, this.lastAction)
+        reward += this.rewardSystemControl.getReward(this.lastTemperature, this.lastAction, this.currentDate);
 
         // Normalize and return
         return Normalization.reward(reward, 1);
