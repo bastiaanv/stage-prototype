@@ -40,10 +40,10 @@ export class ReinforcementLearning implements Learning {
             const cps: TemperatureApproach = Object.assign( Object.create( Object.getPrototypeOf(cpsOriginal) ), cpsOriginal );
             cps.randomizeStart();
 
-            // Generates a random temperature between 15 and 25 degrees and normalizes it
+            // Get temperature and date form Cyber-Physical System
             const temp = Normalization.temperature(cps.getCurrentTemp());
             const time = Normalization.time(cps.getCurrentDate());
-            const tempTensor = tf.tensor([temp, time]);
+            const tempTensor = tf.tensor([[temp, time]]);
 
             // Get the action from the NN
             const actualTensor = tf.tidy(() => this.model.predict(tempTensor) as tf.Tensor);
