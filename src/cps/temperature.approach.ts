@@ -78,6 +78,7 @@ export class TemperatureApproach {
 
     public randomizeStart(): void {
         this.currentTemp = Math.random() * 10 + 15;
+        this.currentDate.setHours(Math.random() * 24, 0, 0, 0);
     }
 
     private calculatePassiveCooling(): number {
