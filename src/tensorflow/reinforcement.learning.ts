@@ -12,7 +12,7 @@ export class ReinforcementLearning implements Learning {
     private readonly nrOfActions: number = 3;
 
     constructor() {
-        const input = tf.input({shape: [1]});
+        const input = tf.input({shape: [2]});
         const dense1 = tf.layers.dense({units: 10, activation: 'relu'}).apply(input);
         const dense2 = tf.layers.dense({units: 10, activation: 'relu'}).apply(dense1);
         const dense3 = tf.layers.dense({units: this.nrOfActions, activation: 'softmax'}).apply(dense2) as tf.SymbolicTensor;
@@ -36,13 +36,14 @@ export class ReinforcementLearning implements Learning {
         const cpsOriginal: TemperatureApproach = TemperatureApproach.make(snapshots, 10, 40, 15);
         let epsilon = 0.1;
 
-        for (let i = 0; i < 12000; i++) {
+        for (let i = 0; i < 60000; i++) {
             const cps: TemperatureApproach = Object.assign( Object.create( Object.getPrototypeOf(cpsOriginal) ), cpsOriginal );
             cps.randomizeStart();
 
             // Generates a random temperature between 15 and 25 degrees and normalizes it
             const temp = Normalization.temperature(cps.getCurrentTemp());
-            const tempTensor = tf.tensor([temp]);
+            const time = Normalization.time(cps.getCurrentDate());
+            const tempTensor = tf.tensor([temp, time]);
 
             // Get the action from the NN
             const actualTensor = tf.tidy(() => this.model.predict(tempTensor) as tf.Tensor);

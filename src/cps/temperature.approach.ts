@@ -17,9 +17,13 @@ export class TemperatureApproach {
         return this.currentTemp;
     }
 
+    private currentDate:                    Date = new Date();
+    public getCurrentDate():                Date {
+        return this.currentDate;
+    }
+
     private lastAction:                     number = 0;
     private lastTemperature:                number = 0;
-    private currentDate:                    Date = new Date();
 
     // private readonly rewardSystemTemperature =  new TemperatureReward();
     private readonly rewardSystemControl =      new RewardSystem();

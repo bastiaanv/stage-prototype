@@ -12,4 +12,10 @@ export class Normalization {
     public static reward(reward: number, max: number): number {
         return reward / max;
     }
+
+    // Max = 24
+    // Min = 0
+    public static time(date: Date): number {
+        return date.getHours() / 24;
+    }
 }
