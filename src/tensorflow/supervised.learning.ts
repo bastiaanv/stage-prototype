@@ -22,7 +22,7 @@ export class SupervisedLearning implements Learning {
         });
     }
 
-    public predict(temp: number): Promise<tf.backend_util.TypedArray> {
+    public predict(temp: number, date: Date): Promise<tf.backend_util.TypedArray> {
         return (this.model.predict(tf.tensor([Normalization.temperature(temp)])) as tf.Tensor).data();
     }
 

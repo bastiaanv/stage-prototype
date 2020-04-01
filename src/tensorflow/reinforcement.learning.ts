@@ -28,8 +28,8 @@ export class ReinforcementLearning implements Learning {
         await this.model.save(this.pathToModel);
     }
 
-    public predict(temp: number) {
-        return (this.model.predict(tf.tensor([Normalization.temperature(temp)])) as tf.Tensor).data();
+    public predict(temp: number, date: Date) {
+        return (this.model.predict(tf.tensor([[Normalization.temperature(temp), Normalization.time(date)]])) as tf.Tensor).data();
     }
 
     public async train(snapshots: Snapshot[]): Promise<void> {
