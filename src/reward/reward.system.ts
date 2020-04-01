@@ -5,13 +5,15 @@
 */
 
 export class RewardSystem {
-    getReward(temp:number, action: number, dateTime: Date): number {
+    getReward(temp: number, action: number, dateTime: Date): number {
         if (dateTime.getHours() >= 20 || dateTime.getHours() <= 7) {
-            return 1;
-        
-        } else if (temp < 16 && action === 1 ||
+            return action === 0 ? 1 : 0;
+
+        } else if (
+            temp < 16 && action === 1 ||
             temp > 20 && action === 2 ||
-            temp >= 16 && temp <= 20 && action === 0) {
+            temp >= 16 && temp <= 20 && action === 0
+        ) {
 
             return 1;
 
