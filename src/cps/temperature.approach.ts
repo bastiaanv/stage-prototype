@@ -67,13 +67,13 @@ export class TemperatureApproach {
         let reward = 0;
 
         // Give reward for current temperature
-        reward += this.rewardSystemTemperature.getReward(this.currentTemp);
+        // reward += this.rewardSystemTemperature.getReward(this.currentTemp);
 
         // Give reward for action taken upon previous temperature
         reward += this.rewardSystemControl.getReward(this.lastTemperature, this.lastAction)
 
         // Normalize and return
-        return Normalization.reward(reward, 2);
+        return Normalization.reward(reward, 1);
     }
 
     public randomizeStart(): void {
