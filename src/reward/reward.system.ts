@@ -6,7 +6,7 @@
 
 export class RewardSystem {
     getReward(temp:number, action: number, dateTime: Date): number {
-        if (dateTime.getHours() => 20 || dateTime.getHours() <= 7) {
+        if (dateTime.getHours() >= 20 || dateTime.getHours() <= 7) {
             return 1;
         
         } else if (temp < 16 && action === 1 ||
