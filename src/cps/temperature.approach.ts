@@ -2,7 +2,6 @@ import { TemperatureReward } from '../reward/temperature.reward';
 import { Snapshot } from '../domain/snapshot.model';
 import { Normalization } from '../math/normalization.math';
 import { Trainer } from '../math/trainer.math';
-import { RewardSystem } from '../reward/reward.interface';
 import { ControlReward } from '../reward/control.reward';
 
 // Formula: Tdot = T - a + Uh * (Tdh + a) + Uc * (Tdc + a)
@@ -20,8 +19,10 @@ export class TemperatureApproach {
     }
 
     private lastAction:                     number = 0;
+    private lastTemperature:                number = 0;
 
-    private readonly rewardSystems:         RewardSystem[];
+    private readonly rewardSystemTemperature =  new TemperatureReward();
+    private readonly rewardSystemControl =      new ControlReward();
 
     private constructor(deltaPasiveCooling: number, outsideTemp: number, deltaActiveHeating: number, deltaActiveCooling: number, heatingTemp: number, coolingTemp: number) {
         this.deltaPasiveCooling = deltaPasiveCooling;
@@ -30,11 +31,6 @@ export class TemperatureApproach {
         this.deltaActiveCooling = deltaActiveCooling;
         this.heatingTemperature = heatingTemp;
         this.coolingTemperature = coolingTemp;
-
-        this.rewardSystems = [
-            new TemperatureReward(),
-            new ControlReward(),
-        ];
     }
 
     public static make(snapshots: Snapshot[], outsideTemp: number, heatingTemp: number, coolingTemp: number): TemperatureApproach {
@@ -51,6 +47,7 @@ export class TemperatureApproach {
         }
 
         this.lastAction = action;
+        this.lastTemperature = this.currentTemp;
         this.currentTemp =  this.calculatePassiveCooling() +
                             this.calculateActiveHeating(action === 1) +
                             this.calculateActiveCooling(action === 2);
@@ -68,16 +65,15 @@ export class TemperatureApproach {
 
     public getReward(): number {
         let reward = 0;
-        for (const rewardSystem of this.rewardSystems) {
-            if (rewardSystem instanceof TemperatureReward) {
-                reward += rewardSystem.getReward(this.getCurrentTemp());
 
-            } else if (rewardSystem instanceof ControlReward) {
-                reward += rewardSystem.getReward(this.lastAction);
-            }
-        }
+        // Give reward for current temperature
+        reward += this.rewardSystemTemperature.getReward(this.currentTemp);
 
-        return Normalization.reward(reward, this.rewardSystems.length);
+        // Give reward for action taken upon previous temperature
+        reward += this.rewardSystemControl.getReward(this.lastTemperature, this.lastAction)
+
+        // Normalize and return
+        return Normalization.reward(reward, 2);
     }
 
     public randomizeStart(): void {
