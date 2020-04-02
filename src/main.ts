@@ -31,7 +31,7 @@ dataImporter.connect().then(async () => {
     const values = await Promise.all(predectionsToMake);
 
     for (let i = 0; i < amountOfRandomTests; i++) {
-        console.log(`For a temperature of ${randomTests[i].temperature} degrees at ${randomTests[i].when}, the machine learning model will do: ${values[i]}`)
+        console.log(`For a temperature of ${randomTests[i].temperature} degrees at ${randomTests[i].when.toISOString()}, the machine learning model will do:\n ${values[i]}`)
     }
 
     await nn.save();
