@@ -10,8 +10,9 @@ const nn: Learning = new ReinforcementLearning();
 
 // First we make connection to the db
 dataImporter.connect().then(async () => {
-    // Then we get the snapshots from the database
+    // Then we get the snapshots from the database and disconnect from the database
     const snapshots = await dataImporter.getSnapshots();
+    await dataImporter.disconnect();
 
     // After that, we will train the NN
     nn.train(snapshots).then(async () => {
@@ -30,6 +31,8 @@ dataImporter.connect().then(async () => {
 
         await nn.save();
     });
+}).catch(async () => {
+    await dataImporter.disconnect();
 });
 
 function createShouldArray() {

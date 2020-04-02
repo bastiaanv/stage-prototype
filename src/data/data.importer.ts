@@ -13,12 +13,22 @@ export class DataImporter {
 
     public connect(): Promise<void> {
         return new Promise((resolve, reject) => {
-            this.database = new sql.ConnectionPool(this.config, err => {
+            this.database = new sql.ConnectionPool(this.config, async (err) => {
                 if (err) {
                     console.error('Connection failed.', err);
                     reject(err);
                 } else {
-                    console.log('Connected!!');
+
+                    // Check if function for cooling normalization exists. If not, it will be created
+                    const checkFunction = `SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[FS\\GBS].[CoolingFunction]') AND type = N'FN'`;
+                    const request = new sql.Request(this.database);
+
+                    if((await request.query(checkFunction)).recordset.length !== 1) {
+                        const createFunction = `CREATE FUNCTION [FS\\GBS].CoolingFunction(@val1 int) RETURNS INT AS BEGIN if @val1 > 1 return 1 return @val1 END;`;
+                        await request.query(createFunction);
+                    }
+
+                    console.log('connected!!');
                     resolve();
                 }
             });
@@ -29,20 +39,21 @@ export class DataImporter {
         return this.database?.close()
     }
 
+    // TODO make table names configurable
     public async getSnapshots(): Promise<Snapshot[]> {
         const query = ` SELECT
-                                t.Systeemtijd AS Systeemtijd,
-                                CAST(t.Waarde AS FLOAT)/10 AS Temperatuur,
-                                h.Waarde AS SturingVerwarming,
-                                c.Waarde AS SturingKoeling
+                                t.Systeemtijd AS "when",
+                                CAST(t.Waarde AS FLOAT)/10 AS temperature,
+                                h.Waarde AS heatingPercentage,
+                                [FS\\GBS].CoolingFunction(c.Waarde) AS coolingPercentage
                         FROM [FS\\GBS].BREIJER_OS1_GRFMET_38 AS t
                         INNER JOIN [FS\\GBS].Breijer_OS1_GRFSYS_45 AS c ON t.Systeemtijd = c.Systeemtijd
                         INNER JOIN [FS\\GBS].Breijer_OS1_GRFSYS_44 AS h ON h.Systeemtijd = t.Systeemtijd
                         WHERE
-                            t.Systeemtijd >= DATEADD(MONTH, -3, GETDATE());`;
+                            t.Systeemtijd >= DATEADD(MONTH, -3, GETDATE())
+                        ORDER BY t.Systeemtijd DESC;`;
 
         const request = new sql.Request(this.database);
-
         return (await request.query(query)).recordset as Snapshot[];
     }
 }
