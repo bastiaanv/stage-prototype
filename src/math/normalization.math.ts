@@ -13,9 +13,9 @@ export class Normalization {
         return reward / max;
     }
 
-    // Max = 24
+    // Max = 23
     // Min = 0
     public static time(date: Date): number {
-        return date.getHours() / 24;
+        return date.getHours() / 23;
     }
 }
