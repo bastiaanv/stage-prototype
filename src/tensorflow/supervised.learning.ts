@@ -2,6 +2,7 @@ import * as tf from '@tensorflow/tfjs-node-gpu';
 import { resolve } from 'path';
 import { Learning } from './learning.interface';
 import { Normalization } from '../math/normalization.math';
+import { Snapshot } from '../domain/snapshot.model';
 
 export class SupervisedLearning implements Learning {
     private readonly pathToModel = 'file://' + resolve(__dirname, '..', '..', 'model');
@@ -21,7 +22,7 @@ export class SupervisedLearning implements Learning {
         });
     }
 
-    public predict(temp: number): Promise<tf.backend_util.TypedArray> {
+    public predict(temp: number, date: Date): Promise<tf.backend_util.TypedArray> {
         return (this.model.predict(tf.tensor([Normalization.temperature(temp)])) as tf.Tensor).data();
     }
 
@@ -29,7 +30,7 @@ export class SupervisedLearning implements Learning {
         await this.model.save(this.pathToModel);
     }
 
-    public async train(): Promise<void> {
+    public async train(snapshots: Snapshot[]): Promise<void> {
         await this.model.fitDataset(
             this.generateDataAndLabels(),
             { epochs: 600, verbose: 1 }

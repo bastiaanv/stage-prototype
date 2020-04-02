@@ -1,13 +1,20 @@
 import { ReinforcementLearning } from './tensorflow/reinforcement.learning';
 import { Learning } from './tensorflow/learning.interface';
+import { DataGenerator } from './data/data.generator';
+
+// Generate data, following a linear form
+const snapshots = DataGenerator.generateLinearData(96);
 
 // Learning
 const nn: Learning = new ReinforcementLearning();
-nn.train().then(async () => {
+nn.train(snapshots).then(async () => {
+    const date = new Date();
+    date.setHours(10,0,0,0);
+
     const values = await Promise.all([
-        nn.predict(15),
-        nn.predict(19),
-        nn.predict(23),
+        nn.predict(15, date),
+        nn.predict(19, date),
+        nn.predict(23, date),
     ])
     console.log(values);
     console.log('Should be:');

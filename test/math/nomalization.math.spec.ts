@@ -51,4 +51,33 @@ describe('Normalization', () => {
             expect(actual).to.approximately(expected, 4);
         });
     });
+
+    describe('time(date)', () => {
+        it('Should return 0 for time is 00:00', () => {
+            const date = new Date(2020, 4, 2, 0, 0, 0, 0);
+
+            const actual = Normalization.time(date);
+            const expected = 0;
+
+            expect(actual).to.approximately(expected, 4);
+        });
+
+        it('Should return 0.5 for time is 12:00', () => {
+            const date = new Date(2020, 4, 2, 12, 0, 0, 0);
+
+            const actual = Normalization.time(date);
+            const expected = 0.5;
+
+            expect(actual).to.approximately(expected, 4);
+        });
+
+        it('Should return 0 for time is 23:00', () => {
+            const date = new Date(2020, 4, 2, 23, 0, 0, 0);
+
+            const actual = Normalization.time(date);
+            const expected = 1;
+
+            expect(actual).to.approximately(expected, 4);
+        });
+    });
 });
