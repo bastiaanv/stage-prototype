@@ -8,7 +8,7 @@ describe('Normalization', () => {
             const temp = 15;
 
             const actual = Normalization.temperature(temp);
-            const expected = 0.5833
+            const expected = 0.5833;
 
             expect(actual).to.approximately(expected, 4);
         });
@@ -17,7 +17,7 @@ describe('Normalization', () => {
             const temp = 25;
 
             const actual = Normalization.temperature(temp);
-            const expected = 0.75
+            const expected = 0.75;
 
             expect(actual).to.approximately(expected, 4);
         });
