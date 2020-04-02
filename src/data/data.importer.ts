@@ -36,16 +36,16 @@ export class DataImporter {
     }
 
     public disconnect() {
-        return this.database?.close()
+        return this.database?.close();
     }
 
     // TODO make table names configurable
     public async getSnapshots(): Promise<Snapshot[]> {
         const query = ` SELECT
-                                t.Systeemtijd AS "when",
-                                CAST(t.Waarde AS FLOAT)/10 AS temperature,
-                                h.Waarde AS heatingPercentage,
-                                [FS\\GBS].CoolingFunction(c.Waarde) AS coolingPercentage
+                            t.Systeemtijd AS "when",
+                            CAST(t.Waarde AS FLOAT)/10 AS temperature,
+                            h.Waarde AS heatingPercentage,
+                            [FS\\GBS].CoolingFunction(c.Waarde) AS coolingPercentage
                         FROM [FS\\GBS].BREIJER_OS1_GRFMET_38 AS t
                         INNER JOIN [FS\\GBS].Breijer_OS1_GRFSYS_45 AS c ON t.Systeemtijd = c.Systeemtijd
                         INNER JOIN [FS\\GBS].Breijer_OS1_GRFSYS_44 AS h ON h.Systeemtijd = t.Systeemtijd
