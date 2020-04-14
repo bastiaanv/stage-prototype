@@ -39,7 +39,6 @@ export class DataImporter {
         return this.database?.close();
     }
 
-    // TODO make table names configurable
     public async getSnapshots(): Promise<Snapshot[]> {
         const query = ` SELECT
                             t.Systeemtijd AS "when",
