@@ -1,15 +1,14 @@
 import * as tf from '@tensorflow/tfjs-node-gpu';
-import { resolve } from 'path';
 import { Learning } from './learning.interface';
 import { Normalization } from '../math/normalization.math';
 import { TemperatureApproach } from '../cps/temperature.approach';
 import { Snapshot } from '../domain/snapshot.model';
 
 export class ReinforcementLearning implements Learning {
-    private readonly pathToModel = 'file://' + resolve(__dirname, '..', '..', 'model');
-
-    private readonly model: tf.LayersModel;
+    private readonly pathToModel = 'file://model';
     private readonly nrOfActions: number = 3;
+
+    private model: tf.LayersModel;
 
     constructor() {
         const input = tf.input({shape: [2]});
@@ -26,6 +25,10 @@ export class ReinforcementLearning implements Learning {
 
     public async save(): Promise<void> {
         await this.model.save(this.pathToModel);
+    }
+
+    public async load(): Promise<void> {
+        this.model = await tf.loadLayersModel(this.pathToModel + '/model.json');
     }
 
     public predict(temp: number, date: Date) {
