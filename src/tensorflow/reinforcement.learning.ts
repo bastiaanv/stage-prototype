@@ -11,11 +11,10 @@ export class ReinforcementLearning implements Learning {
     private model: tf.LayersModel;
 
     constructor() {
-        const input = tf.input({shape: [2]});
-        const dense1 = tf.layers.dense({units: 10, activation: 'relu'}).apply(input);
-        const dense2 = tf.layers.dense({units: 10, activation: 'relu'}).apply(dense1);
-        const dense3 = tf.layers.dense({units: this.nrOfActions, activation: 'softmax'}).apply(dense2) as tf.SymbolicTensor;
-        this.model = tf.model({inputs: input, outputs: dense3});
+        const input = tf.input({shape: [3, 1], name: 'Input'});
+        const lstm1 = tf.layers.lstm({units: 8, activation: 'relu',}).apply(input);
+        const output = tf.layers.dense({units: 3, activation: 'softmax', name: 'output'}).apply(lstm1) as tf.SymbolicTensor;
+        this.model = tf.model({inputs: input, outputs: output});
 
         this.model.compile({
             optimizer: tf.train.adam(),
@@ -23,23 +22,42 @@ export class ReinforcementLearning implements Learning {
         });
     }
 
+    /**
+     * Saves the RNN to: 'ROOT_FOLDER/model'
+     * @returns Promise<void>
+     */
     public async save(): Promise<void> {
         await this.model.save(this.pathToModel);
     }
 
+    /**
+     * Loads the RNN from location: 'ROOT_FOLDER/model'
+     * @returns Promise<void>
+     */
     public async load(): Promise<void> {
         this.model = await tf.loadLayersModel(this.pathToModel + '/model.json');
     }
 
-    public predict(temp: number, date: Date) {
-        return (this.model.predict(tf.tensor([[Normalization.temperature(temp), Normalization.time(date)]])) as tf.Tensor).data();
+    /**
+     * This method can be used to predict the next action using new data
+     * @param data Normalized data for the Recurrent Neural Network. First dimention is for time serries, second dimention contains the situational data, like temperature and date/time
+     * @returns Promise<Float32Array>. When value is close to 1, the RNN is saying that that action has to be done. Position 0 -> Do nothing, Position 1 -> Go Heating, Position 2 -> Go Cooling.
+     */
+    public predict(data: number[][]) {
+        return (this.model.predict(tf.tensor([data])) as tf.Tensor).data();
     }
 
+    /**
+     * Trains the RNN using a self generated dataset
+     * @param snapshots A Dataset to train on
+     * @returns Promse<void>
+     */
     public async train(snapshots: Snapshot[]): Promise<void> {
         const cpsOriginal: TemperatureApproach = TemperatureApproach.make(snapshots, 10, 40, 15);
         let epsilon = 0.1;
 
         for (let i = 0; i < 60000; i++) {
+            // Make deep copy of CPS. This way we do not have to reinitialize the class each iteration, using the trainers and optimizers
             const cps: TemperatureApproach = Object.assign( Object.create( Object.getPrototypeOf(cpsOriginal) ), cpsOriginal );
             cps.randomizeStart();
 

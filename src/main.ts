@@ -3,6 +3,7 @@ import { Learning } from './tensorflow/learning.interface';
 import * as dotenv from 'dotenv';
 import { DataImporter } from './data/data.importer';
 import { SupervisedLearning } from './tensorflow/supervised.learning';
+import { Normalization } from './math/normalization.math';
 
 dotenv.config();
 const amountOfRandomTests = 10;
@@ -19,9 +20,9 @@ const nn: Learning = new SupervisedLearning();
     // After that, we will train the NN
     nn.train([]).then(async () => {
         await nn.save();
-        console.log(await nn.predict(16, new Date()));
-        console.log(await nn.predict(19, new Date()));
-        console.log(await nn.predict(25, new Date()));
+        console.log(await nn.predict([[Normalization.temperature(16)]]));
+        console.log(await nn.predict([[Normalization.temperature(19)]]));
+        console.log(await nn.predict([[Normalization.temperature(25)]]));
     });
 
     // Lets check the accuracy of the NN
