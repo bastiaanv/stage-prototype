@@ -46,9 +46,9 @@ export class DataImporter {
                             CAST(t.Waarde AS FLOAT)/10 AS temperature,
                             h.Waarde AS heatingPercentage,
                             [FS\\GBS].CoolingFunction(c.Waarde) AS coolingPercentage
-                        FROM [FS\\GBS].BREIJER_OS1_GRFMET_38 AS t
-                        INNER JOIN [FS\\GBS].Breijer_OS1_GRFSYS_45 AS c ON t.Systeemtijd = c.Systeemtijd
-                        INNER JOIN [FS\\GBS].Breijer_OS1_GRFSYS_44 AS h ON h.Systeemtijd = t.Systeemtijd
+                        FROM [FS\\GBS].${process.env.TABLE_TEMP} AS t
+                        INNER JOIN [FS\\GBS].${process.env.TABLE_COOLING} AS c ON t.Systeemtijd = c.Systeemtijd
+                        INNER JOIN [FS\\GBS].${process.env.TABLE_HEATING}} AS h ON h.Systeemtijd = t.Systeemtijd
                         WHERE
                             t.Systeemtijd >= DATEADD(MONTH, -3, GETDATE())
                         ORDER BY t.Systeemtijd DESC;`;
