@@ -7,7 +7,7 @@ export class Trainer {
 
             const snapshot = snapshots[i];
             if (snapshot.heatingPercentage === 0 && snapshot.coolingPercentage === 0) {
-                const deltaValue = snapshots[i+1].value - snapshot.value;
+                const deltaValue = snapshots[i+1].temperature - snapshot.temperature;
                 deltaValues.push(deltaValue);
             }
         }
@@ -21,7 +21,7 @@ export class Trainer {
 
             const snapshot = snapshots[i];
             if (snapshot.heatingPercentage > 0 && snapshot.coolingPercentage === 0) {
-                const deltaValue = snapshots[i+1].value - snapshot.value;
+                const deltaValue = snapshots[i+1].temperature - snapshot.temperature;
                 deltaValues.push(deltaValue);
             }
         }
@@ -35,7 +35,7 @@ export class Trainer {
 
             const snapshot = snapshots[i];
             if (snapshot.heatingPercentage === 0 && snapshot.coolingPercentage > 0) {
-                const deltaValue = snapshots[i+1].value - snapshot.value;
+                const deltaValue = snapshots[i+1].temperature - snapshot.temperature;
                 deltaValues.push(deltaValue);
             }
         }

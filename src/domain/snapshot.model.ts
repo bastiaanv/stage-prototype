@@ -1,6 +1,6 @@
 export interface Snapshot {
     when: Date;
-    value: number;
+    temperature: number;
     heatingPercentage: number;
     coolingPercentage: number;
 }

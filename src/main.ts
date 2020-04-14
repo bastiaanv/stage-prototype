@@ -1,43 +1,40 @@
 import { ReinforcementLearning } from './tensorflow/reinforcement.learning';
 import { Learning } from './tensorflow/learning.interface';
-import { DataGenerator } from './data/data.generator';
+import * as dotenv from 'dotenv';
+import { DataImporter } from './data/data.importer';
 
-// Generate data, following a linear form
-const snapshots = DataGenerator.generateLinearData(96);
+dotenv.config();
+const amountOfRandomTests = 10;
 
-// Learning
+const dataImporter = new DataImporter();
 const nn: Learning = new ReinforcementLearning();
-nn.train(snapshots).then(async () => {
-    const date = new Date();
-    date.setHours(10,0,0,0);
 
-    const values = await Promise.all([
-        nn.predict(15, date),
-        nn.predict(19, date),
-        nn.predict(23, date),
-    ])
-    console.log(values);
-    console.log('Should be:');
-    console.log(createShouldArray());
+// First we make connection to the db
+dataImporter.connect().then(async () => {
+    // Then we get the snapshots from the database and disconnect from the database
+    const snapshots = await dataImporter.getSnapshots();
+    await dataImporter.disconnect();
+
+    // After that, we will train the NN
+    await nn.train(snapshots)
+
+    // Lets check the accuracy of the NN
+    const randomTests = [];
+    const predectionsToMake = [];
+    for (let i = 0; i < amountOfRandomTests; i++) {
+        const item = snapshots[Math.floor(Math.random() * snapshots.length)];
+
+        randomTests.push(item);
+        predectionsToMake.push(nn.predict(item.temperature, item.when));
+    }
+
+    const values = await Promise.all(predectionsToMake);
+
+    for (let i = 0; i < amountOfRandomTests; i++) {
+        console.log(`For a temperature of ${randomTests[i].temperature} degrees at ${randomTests[i].when.toISOString()}, the machine learning model will do:\n ${values[i]}`)
+    }
 
     await nn.save();
+}).catch(async () => {
+    await dataImporter.disconnect();
 });
-
-function createShouldArray() {
-    const shouldBe1 = new Float32Array(3);
-    shouldBe1[0] = 0;
-    shouldBe1[1] = 1;
-    shouldBe1[2] = 0;
-
-    const shouldBe2 = new Float32Array(3);
-    shouldBe2[0] = 1;
-    shouldBe2[1] = 0;
-    shouldBe2[2] = 0;
-
-    const shouldBe3 = new Float32Array(3);
-    shouldBe3[0] = 0;
-    shouldBe3[1] = 0;
-    shouldBe3[2] = 1;
-
-    return [shouldBe1, shouldBe2, shouldBe3];
-}
