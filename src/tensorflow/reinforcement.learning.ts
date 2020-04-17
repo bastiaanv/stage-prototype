@@ -20,6 +20,7 @@ export class ReinforcementLearning implements Learning {
 
         this.model.compile({
             optimizer: tf.train.adam(),
+            metrics: [tf.metrics.categoricalAccuracy],
             loss: tf.metrics.categoricalCrossentropy,
         });
     }
