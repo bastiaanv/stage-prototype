@@ -5,6 +5,8 @@ import { DataImporter } from './data/data.importer';
 import { SupervisedLearning } from './tensorflow/supervised.learning';
 import { Normalization } from './math/normalization.math';
 
+const start = new Date();
+
 dotenv.config();
 const amountOfRandomTests = 10;
 
@@ -23,6 +25,8 @@ const nn: Learning = new ReinforcementLearning();
         console.log(await nn.predict([[Normalization.temperature(16)]]));
         console.log(await nn.predict([[Normalization.temperature(19)]]));
         console.log(await nn.predict([[Normalization.temperature(25)]]));
+
+        console.log(`Time took: ${Math.abs((new Date().getTime() - start.getTime()) / 1000)}sec, started: ${start.toISOString()}, time ended: ${new Date().toISOString()}`)
     });
 
     // Lets check the accuracy of the NN
