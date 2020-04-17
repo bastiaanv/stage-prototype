@@ -68,40 +68,43 @@ export class ReinforcementLearning implements Learning {
         const cpsOriginal: CyberPhysicalSystem = CyberPhysicalSystem.make(snapshots, 10, 40, 15);
         let epsilon = 0.1;
 
-        for (let i = 0; i < 60000; i++) {
+        for (let i = 0; i < 600; i++) {
             // Make deep copy of CPS. This way we do not have to reinitialize the class each iteration, using the trainers and optimizers
             const cps: CyberPhysicalSystem = Object.assign( Object.create( Object.getPrototypeOf(cpsOriginal) ), cpsOriginal );
             cps.start(this.timeSeries);
 
-            // Get temperature and date form Cyber-Physical System
-            const tempTensor = tf.tensor([[...cps.getDataFromMemory(this.timeSeries-1), cps.getCurrentData()]]);
+            // Let it loop through one day
+            for (let j = 0; j < 96; j++) {
+                // Get temperature and date form Cyber-Physical System
+                const tempTensor = tf.tensor([[...cps.getDataFromMemory(this.timeSeries-1), cps.getCurrentData()]]);
 
-            // Get the action from the NN
-            const actualTensor = tf.tidy(() => this.model.predict(tempTensor) as tf.Tensor);
-            const actionTensor = tf.tidy(() => actualTensor.argMax(1));
-            const [actions, actual] = await Promise.all([
-                actionTensor.data(),
-                actualTensor.data(),
-            ]);
+                // Get the action from the NN
+                const actualTensor = tf.tidy(() => this.model.predict(tempTensor) as tf.Tensor);
+                const actionTensor = tf.tidy(() => actualTensor.argMax(1));
+                const [actions, actual] = await Promise.all([
+                    actionTensor.data(),
+                    actualTensor.data(),
+                ]);
 
-            // If true, then perform random action instead of action that would be taken by the Neural Network
-            if (Math.random() < epsilon) {
-                actions[0] = Math.round(Math.random() * this.nrOfActions);
+                // If true, then perform random action instead of action that would be taken by the Neural Network
+                if (Math.random() < epsilon) {
+                    actions[0] = Math.round(Math.random() * this.nrOfActions);
+                }
+
+                // Do action and get reward for NN and update actual array
+                cps.step(actions[0]);
+                actual[actions[0]] = cps.getReward();
+
+                // Train NN
+                const label = tf.tensor([actual]);
+                await this.model.fit(tempTensor, label, { epochs: 5, verbose: 1 });
+
+                // Dispose remaining tensors
+                tempTensor.dispose();
+                label.dispose();
+                actualTensor.dispose();
+                actionTensor.dispose();
             }
-
-            // Do action and get reward for NN and update actual array
-            cps.step(actions[0]);
-            actual[actions[0]] = cps.getReward();
-
-            // Train NN
-            const label = tf.tensor([actual]);
-            await this.model.fit(tempTensor, label, { epochs: 5, verbose: 1 });
-
-            // Dispose remaining tensors
-            tempTensor.dispose();
-            label.dispose();
-            actualTensor.dispose();
-            actionTensor.dispose();
 
             // Degrease chance on random action
             epsilon = 1/( ( i/50 ) + 10 );
