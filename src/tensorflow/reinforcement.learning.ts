@@ -1,12 +1,12 @@
 import * as tf from '@tensorflow/tfjs-node-gpu';
 import { Learning } from './learning.interface';
 import { Normalization } from '../math/normalization.math';
-import { TemperatureApproach } from '../cps/temperature.approach';
+import { CyberPhysicalSystem } from '../cps/cyber.physical.system';
 import { Snapshot } from '../domain/snapshot.model';
 
 export class ReinforcementLearning implements Learning {
     private readonly pathToModel = 'file://model';
-    private readonly nrOfInputs: number = 1;
+    private readonly nrOfInputs: number = 2;
     private readonly nrOfActions: number = 3;
     private readonly timeSeries: number = 8;
 
@@ -65,18 +65,16 @@ export class ReinforcementLearning implements Learning {
      * @returns Promse<void>
      */
     public async train(snapshots: Snapshot[]): Promise<void> {
-        const cpsOriginal: TemperatureApproach = TemperatureApproach.make(snapshots, 10, 40, 15);
+        const cpsOriginal: CyberPhysicalSystem = CyberPhysicalSystem.make(snapshots, 10, 40, 15);
         let epsilon = 0.1;
 
         for (let i = 0; i < 60000; i++) {
             // Make deep copy of CPS. This way we do not have to reinitialize the class each iteration, using the trainers and optimizers
-            const cps: TemperatureApproach = Object.assign( Object.create( Object.getPrototypeOf(cpsOriginal) ), cpsOriginal );
-            cps.randomizeStart();
+            const cps: CyberPhysicalSystem = Object.assign( Object.create( Object.getPrototypeOf(cpsOriginal) ), cpsOriginal );
+            cps.start(this.timeSeries);
 
             // Get temperature and date form Cyber-Physical System
-            const temp = Normalization.temperature(cps.getCurrentTemp());
-            const time = Normalization.time(cps.getCurrentDate());
-            const tempTensor = tf.tensor([[temp, time]]);
+            const tempTensor = tf.tensor([[...cps.getDataFromMemory(this.timeSeries-1), cps.getCurrentData()]]);
 
             // Get the action from the NN
             const actualTensor = tf.tidy(() => this.model.predict(tempTensor) as tf.Tensor);

@@ -9,7 +9,7 @@ dotenv.config();
 const amountOfRandomTests = 10;
 
 const dataImporter = new DataImporter();
-const nn: Learning = new SupervisedLearning();
+const nn: Learning = new ReinforcementLearning();
 
 // First we make connection to the db
 // dataImporter.connect().then(async () => {
