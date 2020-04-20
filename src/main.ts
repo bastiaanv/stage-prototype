@@ -20,11 +20,42 @@ const nn: Learning = new ReinforcementLearning();
     // await dataImporter.disconnect();
 
     // After that, we will train the NN
-    nn.train([]).then(async () => {
+    nn.load().then(async () => {
         await nn.save();
-        console.log(await nn.predict([[Normalization.temperature(16)]]));
-        console.log(await nn.predict([[Normalization.temperature(19)]]));
-        console.log(await nn.predict([[Normalization.temperature(25)]]));
+
+        const date = new Date();
+        date.setHours(9,0,0,0);
+        console.log(await nn.predict([
+            [Normalization.temperature(16), Normalization.time(date)],
+            [Normalization.temperature(16), Normalization.time(date)],
+            [Normalization.temperature(16), Normalization.time(date)],
+            [Normalization.temperature(16), Normalization.time(date)],
+            [Normalization.temperature(16), Normalization.time(date)],
+            [Normalization.temperature(16), Normalization.time(date)],
+            [Normalization.temperature(16), Normalization.time(date)],
+            [Normalization.temperature(16), Normalization.time(date)]
+        ]));
+
+        console.log(await nn.predict([
+            [Normalization.temperature(19), Normalization.time(date)],
+            [Normalization.temperature(19), Normalization.time(date)],
+            [Normalization.temperature(19), Normalization.time(date)],
+            [Normalization.temperature(19), Normalization.time(date)],
+            [Normalization.temperature(19), Normalization.time(date)],
+            [Normalization.temperature(19), Normalization.time(date)],
+            [Normalization.temperature(19), Normalization.time(date)],
+            [Normalization.temperature(19), Normalization.time(date)],
+        ]));
+        console.log(await nn.predict([
+            [Normalization.temperature(25), Normalization.time(date)],
+            [Normalization.temperature(25), Normalization.time(date)],
+            [Normalization.temperature(25), Normalization.time(date)],
+            [Normalization.temperature(25), Normalization.time(date)],
+            [Normalization.temperature(25), Normalization.time(date)],
+            [Normalization.temperature(25), Normalization.time(date)],
+            [Normalization.temperature(25), Normalization.time(date)],
+            [Normalization.temperature(25), Normalization.time(date)],
+        ]));
 
         console.log(`Time took: ${Math.abs((new Date().getTime() - start.getTime()) / 1000)}sec, started: ${start.toISOString()}, time ended: ${new Date().toISOString()}`)
     });
