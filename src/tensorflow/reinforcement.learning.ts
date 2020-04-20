@@ -1,6 +1,5 @@
 import * as tf from '@tensorflow/tfjs-node-gpu';
 import { Learning } from './learning.interface';
-import { Normalization } from '../math/normalization.math';
 import { CyberPhysicalSystem } from '../cps/cyber.physical.system';
 import { Snapshot } from '../domain/snapshot.model';
 
