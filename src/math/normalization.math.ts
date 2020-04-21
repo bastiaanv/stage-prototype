@@ -13,9 +13,10 @@ export class Normalization {
         return reward / max;
     }
 
-    // Max = 23
+    // Hour normalization
+    // Max = 24 * 60 = 1440
     // Min = 0
     public static time(date: Date): number {
-        return date.getHours() / 23;
+        return (date.getHours() * 60 + date.getMinutes()) / 1440;
     }
 }

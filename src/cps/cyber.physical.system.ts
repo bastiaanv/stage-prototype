@@ -2,28 +2,32 @@ import { Snapshot } from '../domain/snapshot.model';
 import { Normalization } from '../math/normalization.math';
 import { Trainer } from '../math/trainer.math';
 import { RewardSystem } from '../reward/reward.system';
+import { MemoryCPS, MemoryData } from './memory.cyber.physical.system';
 
 // Formula: Tdot = T - a + Uh * (Tdh + a) + Uc * (Tdc + a)
-export class TemperatureApproach {
+export class CyberPhysicalSystem {
+    private readonly memory                 = new MemoryCPS();
+
     private readonly deltaPasiveCooling:    number;     // a
     private readonly deltaActiveHeating:    number;     // Tdh
     private readonly deltaActiveCooling:    number;     // Tdc
     private readonly heatingTemperature:    number;     // Tmaxh
     private readonly coolingTemperature:    number;     // Tminc
     private readonly outsideTemp:           number;     // Tminp
-
     private currentTemp:                    number = 0; // T
-    public getCurrentTemp():                number {
-        return this.currentTemp;
-    }
-
     private currentDate:                    Date = new Date();
-    public getCurrentDate():                Date {
-        return this.currentDate;
+
+    private getLastData():                  MemoryData {
+        return this.memory.getLastData(1)[0];
     }
 
-    private lastAction:                     number = 0;
-    private lastTemperature:                number = 0;
+    public getDataFromMemory(count: number): number[][] {
+        return this.memory.getLastData(count).map(x => [Normalization.temperature(x.temperature), Normalization.time(x.date)]);
+    }
+
+    public getCurrentData():                number[] {
+        return [Normalization.temperature(this.currentTemp), Normalization.time(this.currentDate)]
+    }
 
     // private readonly rewardSystemTemperature =  new TemperatureReward();
     private readonly rewardSystemControl =      new RewardSystem();
@@ -37,12 +41,12 @@ export class TemperatureApproach {
         this.coolingTemperature = coolingTemp;
     }
 
-    public static make(snapshots: Snapshot[], outsideTemp: number, heatingTemp: number, coolingTemp: number): TemperatureApproach {
+    public static make(snapshots: Snapshot[], outsideTemp: number, heatingTemp: number, coolingTemp: number): CyberPhysicalSystem {
         const deltaPassiveCooling   = Trainer.calculatePassiveCooling(snapshots);
         const deltaActiveHeating    = Trainer.calculateActiveHeating(snapshots);
         const deltaActiveCooling    = Trainer.calculateActiveCooling(snapshots);
 
-        return new TemperatureApproach(deltaPassiveCooling, outsideTemp, deltaActiveHeating, deltaActiveCooling, heatingTemp, coolingTemp);
+        return new CyberPhysicalSystem(deltaPassiveCooling, outsideTemp, deltaActiveHeating, deltaActiveCooling, heatingTemp, coolingTemp);
     }
 
     public step(action: number): void {
@@ -50,8 +54,14 @@ export class TemperatureApproach {
             throw new Error('Action does not match actions available...');
         }
 
-        this.lastAction = action;
-        this.lastTemperature = this.currentTemp;
+        // Save to memory
+        this.memory.add({
+            date: new Date(this.currentDate.getTime()),
+            temperature: this.currentTemp,
+            action,
+        });
+
+        // Calculate new temperature
         this.currentTemp =  this.calculatePassiveCooling() +
                             this.calculateActiveHeating(action === 1) +
                             this.calculateActiveCooling(action === 2);
@@ -65,24 +75,35 @@ export class TemperatureApproach {
         } else if (action === 0 && this.currentTemp < this.outsideTemp) {
             this.currentTemp = this.outsideTemp;
         }
+
+        // Increase time with 15 minutes
+        this.currentDate.setMinutes(this.currentDate.getMinutes() + 15);
     }
 
     public getReward(): number {
         let reward = 0;
 
-        // Give reward for current temperature
-        // reward += this.rewardSystemTemperature.getReward(this.currentTemp);
-
         // Give reward for action taken upon previous temperature
-        reward += this.rewardSystemControl.getReward(this.lastTemperature, this.lastAction, this.currentDate);
+        const lastData = this.getLastData();
+        reward += this.rewardSystemControl.getReward(lastData.temperature, lastData.action, lastData.date);
 
         // Normalize and return
         return Normalization.reward(reward, 1);
     }
 
-    public randomizeStart(): void {
+    public start(timeSerieLength: number): void {
+        // Setup init values (temperature and dateTime)
+        const date = new Date();
+        date.setDate(Math.round(Math.random() * 30));
+        date.setHours(Math.round(Math.random() * 24), 0, 0, 0);
+
+        this.currentDate = date;
         this.currentTemp = Math.random() * 10 + 15;
-        this.currentDate.setHours(Math.round(Math.random() * 24), 0, 0, 0);
+
+        // Fill memory with init data
+        for (let i = 0; i < timeSerieLength; i++) {
+            this.step(0);
+        }
     }
 
     private calculatePassiveCooling(): number {
