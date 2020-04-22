@@ -7,6 +7,7 @@ import { MemoryCPS, MemoryData } from './memory.cyber.physical.system';
 // Formula: Tdot = T - a + Uh * (Tdh + a) + Uc * (Tdc + a)
 export class CyberPhysicalSystem {
     private readonly memory                 = new MemoryCPS();
+    private readonly historicData           : Snapshot[];
 
     private readonly deltaPasiveCooling:    number;     // a
     private readonly deltaActiveHeating:    number;     // Tdh
@@ -22,23 +23,33 @@ export class CyberPhysicalSystem {
     }
 
     public getDataFromMemory(count: number): number[][] {
-        return this.memory.getLastData(count).map(x => [Normalization.temperature(x.temperature), Normalization.time(x.date)]);
+        return this.memory.getLastData(count).map(x => [
+            Normalization.temperature(x.temperature),
+            Normalization.temperature(x.outsideTemperature),
+            Normalization.time(x.date),
+            Normalization.date(x.date),
+        ]);
     }
 
     public getCurrentData():                number[] {
-        return [Normalization.temperature(this.currentTemp), Normalization.time(this.currentDate)]
+        return [
+            Normalization.temperature(this.currentTemp),
+            Normalization.time(this.currentDate),
+            Normalization.date(this.currentDate),
+        ];
     }
 
     // private readonly rewardSystemTemperature =  new TemperatureReward();
     private readonly rewardSystemControl =      new RewardSystem();
 
-    private constructor(deltaPasiveCooling: number, outsideTemp: number, deltaActiveHeating: number, deltaActiveCooling: number, heatingTemp: number, coolingTemp: number) {
+    private constructor(deltaPasiveCooling: number, outsideTemp: number, deltaActiveHeating: number, deltaActiveCooling: number, heatingTemp: number, coolingTemp: number, snapshots: Snapshot[]) {
         this.deltaPasiveCooling = deltaPasiveCooling;
         this.outsideTemp        = outsideTemp;
         this.deltaActiveHeating = deltaActiveHeating;
         this.deltaActiveCooling = deltaActiveCooling;
         this.heatingTemperature = heatingTemp;
         this.coolingTemperature = coolingTemp;
+        this.historicData = snapshots;
     }
 
     public static make(snapshots: Snapshot[], outsideTemp: number, heatingTemp: number, coolingTemp: number): CyberPhysicalSystem {
@@ -46,18 +57,20 @@ export class CyberPhysicalSystem {
         const deltaActiveHeating    = Trainer.calculateActiveHeating(snapshots);
         const deltaActiveCooling    = Trainer.calculateActiveCooling(snapshots);
 
-        return new CyberPhysicalSystem(deltaPassiveCooling, outsideTemp, deltaActiveHeating, deltaActiveCooling, heatingTemp, coolingTemp);
+        return new CyberPhysicalSystem(deltaPassiveCooling, outsideTemp, deltaActiveHeating, deltaActiveCooling, heatingTemp, coolingTemp, snapshots);
     }
 
     public step(action: number): void {
         if (action > 3) {
             throw new Error('Action does not match actions available...');
         }
-
+        console.log(this.currentDate)
+        console.log(this.historicData.find(x => x.when.getTime() === this.currentDate.getTime()))
         // Save to memory
         this.memory.add({
             date: new Date(this.currentDate.getTime()),
             temperature: this.currentTemp,
+            outsideTemperature: this.historicData.find(x => x.when.getTime() === this.currentDate.getTime())!.outsideTemperature,
             action,
         });
 
@@ -76,8 +89,8 @@ export class CyberPhysicalSystem {
             this.currentTemp = this.outsideTemp;
         }
 
-        // Increase time with 15 minutes
-        this.currentDate.setMinutes(this.currentDate.getMinutes() + 15);
+        // Increase time with 8 minutes
+        this.currentDate.setMinutes(this.currentDate.getMinutes() + 8);
     }
 
     public getReward(): number {
@@ -93,9 +106,7 @@ export class CyberPhysicalSystem {
 
     public start(timeSerieLength: number): void {
         // Setup init values (temperature and dateTime)
-        const date = new Date();
-        date.setDate(Math.round(Math.random() * 30));
-        date.setHours(Math.round(Math.random() * 24), 0, 0, 0);
+        const date = new Date(this.historicData[0].when.getTime());
 
         this.currentDate = date;
         this.currentTemp = Math.random() * 10 + 15;

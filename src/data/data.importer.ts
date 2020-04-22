@@ -8,8 +8,11 @@ export class DataImporter {
         password: process.env.DB_PASSWORD as string,
         server: process.env.DB_HOST as string,
         database: process.env.DB_DATABASE as string,
-        port: +(process.env.DB_PORT as string)
-    }
+        port: +(process.env.DB_PORT as string),
+        options: {
+            enableArithAbort: true,
+        },
+    };
 
     public connect(): Promise<void> {
         return new Promise((resolve, reject) => {
@@ -41,16 +44,17 @@ export class DataImporter {
 
     public async getSnapshots(): Promise<Snapshot[]> {
         const query = ` SELECT
-                            t.Systeemtijd AS "when",
-                            CAST(t.Waarde AS FLOAT)/10 AS temperature,
-                            h.Waarde AS heatingPercentage,
-                            [FS\\GBS].CoolingFunction(c.Waarde) AS coolingPercentage
-                        FROM [FS\\GBS].${process.env.TABLE_TEMP} AS t
-                        INNER JOIN [FS\\GBS].${process.env.TABLE_COOLING} AS c ON t.Systeemtijd = c.Systeemtijd
-                        INNER JOIN [FS\\GBS].${process.env.TABLE_HEATING}} AS h ON h.Systeemtijd = t.Systeemtijd
+                            DATEADD(MINUTE, DATEDIFF(MINUTE, '2000', t.[Systeemtijd]) / 15 * 15, '2000') AS 'when',
+                            CAST(AVG(t.Waarde) AS FLOAT) / 10 AS 'temperature',
+                            MAX(h.Waarde) AS 'heatingPercentage',
+                            [FS\GBS].CoolingFunction(MAX(c.Waarde)) AS coolingPercentage
+                        FROM [FS\GBS].BREIJER_OS1_GRFMET_39 AS t
+                        INNER JOIN [FS\GBS].BREIJER_OS1_GRFSYS_48 AS c ON t.Systeemtijd = c.Systeemtijd
+                        INNER JOIN [FS\GBS].BREIJER_OS1_GRFSYS_47 AS h ON h.Systeemtijd = t.Systeemtijd
                         WHERE
                             t.Systeemtijd >= DATEADD(MONTH, -3, GETDATE())
-                        ORDER BY t.Systeemtijd DESC;`;
+                        GROUP BY DATEADD(MINUTE, DATEDIFF(MINUTE, '2000', t.[Systeemtijd]) / 15 * 15, '2000')
+                        ORDER BY 'when' DESC;`;
 
         const request = new sql.Request(this.database);
         return (await request.query(query)).recordset as Snapshot[];

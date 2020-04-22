@@ -21,6 +21,7 @@ export class MemoryCPS {
 
 export interface MemoryData {
     temperature: number;
+    outsideTemperature: number;
     date: Date;
-    action: number
+    action: number;
 }

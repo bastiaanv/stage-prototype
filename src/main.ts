@@ -18,42 +18,49 @@ dataImporter.connect().then(async () => {
     await dataImporter.disconnect();
 
     // After that, we will train the NN
-    nn.load().then(async () => {
+    nn.train(snapshots).then(async () => {
         await nn.save();
 
         // Lets check the accuracy of the NN
-        const date = new Date();
-        date.setHours(9,0,0,0);
+        // Form data = [RoomTemperature, OutsideTemperature, Time, Date]
+        const outsideTemperature = Normalization.temperature(19);
+        const date = new Date(2020, 4, 22, 9, 0, 0,0);
+        const dateNormalized = Normalization.date(date);
+        const timeNormalized = Normalization.time(date);
+        const roomTemperature16 = Normalization.temperature(16);
+        const roomTemperature19 = Normalization.temperature(19);
+        const roomTemperature25 = Normalization.temperature(25);
+
         console.log(await nn.predict([
-            [Normalization.temperature(16), Normalization.time(date)],
-            [Normalization.temperature(16), Normalization.time(date)],
-            [Normalization.temperature(16), Normalization.time(date)],
-            [Normalization.temperature(16), Normalization.time(date)],
-            [Normalization.temperature(16), Normalization.time(date)],
-            [Normalization.temperature(16), Normalization.time(date)],
-            [Normalization.temperature(16), Normalization.time(date)],
-            [Normalization.temperature(16), Normalization.time(date)]
+            [roomTemperature16, outsideTemperature, timeNormalized, dateNormalized],
+            [roomTemperature16, outsideTemperature, timeNormalized, dateNormalized],
+            [roomTemperature16, outsideTemperature, timeNormalized, dateNormalized],
+            [roomTemperature16, outsideTemperature, timeNormalized, dateNormalized],
+            [roomTemperature16, outsideTemperature, timeNormalized, dateNormalized],
+            [roomTemperature16, outsideTemperature, timeNormalized, dateNormalized],
+            [roomTemperature16, outsideTemperature, timeNormalized, dateNormalized],
+            [roomTemperature16, outsideTemperature, timeNormalized, dateNormalized],
         ]));
 
         console.log(await nn.predict([
-            [Normalization.temperature(19), Normalization.time(date)],
-            [Normalization.temperature(19), Normalization.time(date)],
-            [Normalization.temperature(19), Normalization.time(date)],
-            [Normalization.temperature(19), Normalization.time(date)],
-            [Normalization.temperature(19), Normalization.time(date)],
-            [Normalization.temperature(19), Normalization.time(date)],
-            [Normalization.temperature(19), Normalization.time(date)],
-            [Normalization.temperature(19), Normalization.time(date)],
+            [roomTemperature19, outsideTemperature, timeNormalized, dateNormalized],
+            [roomTemperature19, outsideTemperature, timeNormalized, dateNormalized],
+            [roomTemperature19, outsideTemperature, timeNormalized, dateNormalized],
+            [roomTemperature19, outsideTemperature, timeNormalized, dateNormalized],
+            [roomTemperature19, outsideTemperature, timeNormalized, dateNormalized],
+            [roomTemperature19, outsideTemperature, timeNormalized, dateNormalized],
+            [roomTemperature19, outsideTemperature, timeNormalized, dateNormalized],
+            [roomTemperature19, outsideTemperature, timeNormalized, dateNormalized],
         ]));
         console.log(await nn.predict([
-            [Normalization.temperature(25), Normalization.time(date)],
-            [Normalization.temperature(25), Normalization.time(date)],
-            [Normalization.temperature(25), Normalization.time(date)],
-            [Normalization.temperature(25), Normalization.time(date)],
-            [Normalization.temperature(25), Normalization.time(date)],
-            [Normalization.temperature(25), Normalization.time(date)],
-            [Normalization.temperature(25), Normalization.time(date)],
-            [Normalization.temperature(25), Normalization.time(date)],
+            [roomTemperature25, outsideTemperature, timeNormalized, dateNormalized],
+            [roomTemperature25, outsideTemperature, timeNormalized, dateNormalized],
+            [roomTemperature25, outsideTemperature, timeNormalized, dateNormalized],
+            [roomTemperature25, outsideTemperature, timeNormalized, dateNormalized],
+            [roomTemperature25, outsideTemperature, timeNormalized, dateNormalized],
+            [roomTemperature25, outsideTemperature, timeNormalized, dateNormalized],
+            [roomTemperature25, outsideTemperature, timeNormalized, dateNormalized],
+            [roomTemperature25, outsideTemperature, timeNormalized, dateNormalized],
         ]));
 
         console.log(`Time took: ${Math.abs((new Date().getTime() - start.getTime()) / 1000)}sec, started: ${start.toISOString()}, time ended: ${new Date().toISOString()}`)

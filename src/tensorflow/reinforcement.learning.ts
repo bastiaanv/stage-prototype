@@ -5,7 +5,7 @@ import { Snapshot } from '../domain/snapshot.model';
 
 export class ReinforcementLearning implements Learning {
     private readonly pathToModel = 'file://model';
-    private readonly nrOfInputs: number = 2;
+    private readonly nrOfInputs: number = 4;
     private readonly nrOfActions: number = 3;
     private readonly timeSeries: number = 8;
 
