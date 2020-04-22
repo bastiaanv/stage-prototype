@@ -28,3 +28,11 @@ jobs:
       uses: coverallsapp/github-action@v1.0.1
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
+        
+    # Keep disabled until prod server is available
+    - name: deployement
+      if: contains('', ' ')
+      run: |
+        npm i -g pm2
+        echo "DB_HOST=${{DB_HOST}}\nDB_PORT=${{DB_PORT}}\nDB_USER=${{DB_USER}}\nDB_PASSWORD=${{DB_PASSWORD}}\nDB_DATABASE=${{DB_DATABASE}}\nTABLE_TEMP=${{TABLE_TEMP}}\nTABLE_OUTSIDE=\nTABLE_HEATING=${{TABLE_HEATING}}\nTABLE_COOLING=${{TABLE_COOLING}}" > .env
+        pm2 deploy production update
