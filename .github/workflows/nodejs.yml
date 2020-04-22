@@ -34,5 +34,5 @@ jobs:
       if: contains('', ' ')
       run: |
         npm i -g pm2
-        echo "DB_HOST=${{DB_HOST}}\nDB_PORT=${{DB_PORT}}\nDB_USER=${{DB_USER}}\nDB_PASSWORD=${{DB_PASSWORD}}\nDB_DATABASE=${{DB_DATABASE}}\nTABLE_TEMP=${{TABLE_TEMP}}\nTABLE_OUTSIDE=\nTABLE_HEATING=${{TABLE_HEATING}}\nTABLE_COOLING=${{TABLE_COOLING}}" > .env
+        echo "DB_HOST=${{secrets.DB_HOST}}\nDB_PORT=${{secrets.DB_PORT}}\nDB_USER=${{secrets.DB_USER}}\nDB_PASSWORD=${{secrets.DB_PASSWORD}}\nDB_DATABASE=${{secrets.DB_DATABASE}}\nTABLE_TEMP=${{secrets.TABLE_TEMP}}\nTABLE_OUTSIDE=${{secrets.TABLE_OUTSIDE}}\nTABLE_HEATING=${{secrets.TABLE_HEATING}}\nTABLE_COOLING=${{secrets.TABLE_COOLING}}" > .env
         pm2 deploy production update
