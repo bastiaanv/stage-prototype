@@ -50,7 +50,9 @@ export class DataImporter {
                         INNER JOIN [FS\\GBS].${process.env.TABLE_HEATING}} AS h ON h.Systeemtijd = t.Systeemtijd
                         WHERE
                             t.Systeemtijd >= DATEADD(MONTH, -3, GETDATE())
-                        ORDER BY t.Systeemtijd DESC;`;
+                        GROUP BY [t.Systeemtijd], DATEPART(mi, [t.Systeemtijd]) / 15
+//                      ORDER BY t.Systeemtijd DESC;
+                        `;
 
         const request = new sql.Request(this.database);
         return (await request.query(query)).recordset as Snapshot[];
