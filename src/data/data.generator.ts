@@ -17,6 +17,7 @@ export class DataGenerator {
             output.push({
                 when: new Date(time.getTime()),
                 temperature: formula.next(),
+                outsideTemperature: 19,
                 heatingPercentage: formula.isActivelyHeating() ? 1 : 0,
                 coolingPercentage: formula.isActivelyCooling() ? 1 : 0,
             });

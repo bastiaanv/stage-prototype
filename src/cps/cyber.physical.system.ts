@@ -34,6 +34,7 @@ export class CyberPhysicalSystem {
     public getCurrentData():                number[] {
         return [
             Normalization.temperature(this.currentTemp),
+            Normalization.temperature(this.historicData.find(x => x.when.getTime() === this.currentDate.getTime())!.outsideTemperature),
             Normalization.time(this.currentDate),
             Normalization.date(this.currentDate),
         ];
@@ -64,8 +65,7 @@ export class CyberPhysicalSystem {
         if (action > 3) {
             throw new Error('Action does not match actions available...');
         }
-        console.log(this.currentDate)
-        console.log(this.historicData.find(x => x.when.getTime() === this.currentDate.getTime()))
+
         // Save to memory
         this.memory.add({
             date: new Date(this.currentDate.getTime()),
@@ -89,8 +89,8 @@ export class CyberPhysicalSystem {
             this.currentTemp = this.outsideTemp;
         }
 
-        // Increase time with 8 minutes
-        this.currentDate.setMinutes(this.currentDate.getMinutes() + 8);
+        // Increase time with 15 minutes
+        this.currentDate.setMinutes(this.currentDate.getMinutes() + 15);
     }
 
     public getReward(): number {

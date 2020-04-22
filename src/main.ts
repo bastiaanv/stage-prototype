@@ -66,6 +66,7 @@ dataImporter.connect().then(async () => {
         console.log(`Time took: ${Math.abs((new Date().getTime() - start.getTime()) / 1000)}sec, started: ${start.toISOString()}, time ended: ${new Date().toISOString()}`)
     });
 
-}).catch(async () => {
+}).catch(async (err) => {
+    console.log(err);
     await dataImporter.disconnect();
 });

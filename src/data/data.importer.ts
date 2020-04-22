@@ -46,15 +46,17 @@ export class DataImporter {
         const query = ` SELECT
                             DATEADD(MINUTE, DATEDIFF(MINUTE, '2000', t.[Systeemtijd]) / 15 * 15, '2000') AS 'when',
                             CAST(AVG(t.Waarde) AS FLOAT) / 10 AS 'temperature',
+                            CAST(AVG(o.Waarde) AS FLOAT) / 10 AS 'outsideTemperature',
                             MAX(h.Waarde) AS 'heatingPercentage',
-                            [FS\GBS].CoolingFunction(MAX(c.Waarde)) AS coolingPercentage
-                        FROM [FS\GBS].BREIJER_OS1_GRFMET_39 AS t
-                        INNER JOIN [FS\GBS].BREIJER_OS1_GRFSYS_48 AS c ON t.Systeemtijd = c.Systeemtijd
-                        INNER JOIN [FS\GBS].BREIJER_OS1_GRFSYS_47 AS h ON h.Systeemtijd = t.Systeemtijd
+                            [FS\\GBS].CoolingFunction(MAX(c.Waarde)) AS coolingPercentage
+                        FROM [FS\\GBS].${process.env.TABLE_TEMP} AS t
+                        INNER JOIN [FS\\GBS].${process.env.TABLE_COOLING} AS c ON t.Systeemtijd = c.Systeemtijd
+                        INNER JOIN [FS\\GBS].${process.env.TABLE_HEATING} AS h ON t.Systeemtijd = h.Systeemtijd
+                        INNER JOIN [FS\\GBS].${process.env.TABLE_OUTSIDE} AS o ON t.Systeemtijd = o.Systeemtijd
                         WHERE
                             t.Systeemtijd >= DATEADD(MONTH, -3, GETDATE())
                         GROUP BY DATEADD(MINUTE, DATEDIFF(MINUTE, '2000', t.[Systeemtijd]) / 15 * 15, '2000')
-                        ORDER BY 'when' DESC;`;
+                        ORDER BY 'when' ASC;`;
 
         const request = new sql.Request(this.database);
         return (await request.query(query)).recordset as Snapshot[];
