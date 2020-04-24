@@ -5,7 +5,7 @@ export interface Snapshot {
     /**
      * Datasource is KNMI with in between a Facilicom REST wrapper
      */
-    outside: Outside;
+    outside?: Outside;
 
     // Actions
     heatingPercentage: number;
