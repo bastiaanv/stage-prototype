@@ -34,7 +34,7 @@ export class CyberPhysicalSystem {
     public getCurrentData():                number[] {
         return [
             Normalization.temperature(this.currentTemp),
-            Normalization.temperature(this.historicData.find(x => x.when.getTime() === this.currentDate.getTime())!.outside.temperature),
+            Normalization.temperature(this.historicData.find(x => x.when.getTime() === this.currentDate.getTime())!.outside!.temperature),
             Normalization.time(this.currentDate),
             Normalization.date(this.currentDate),
         ];
@@ -70,7 +70,7 @@ export class CyberPhysicalSystem {
         this.memory.add({
             date: new Date(this.currentDate.getTime()),
             temperature: this.currentTemp,
-            outsideTemperature: this.historicData.find(x => x.when.getTime() === this.currentDate.getTime())!.outside.temperature,
+            outsideTemperature: this.historicData.find(x => x.when.getTime() === this.currentDate.getTime())!.outside!.temperature,
             action,
         });
 
