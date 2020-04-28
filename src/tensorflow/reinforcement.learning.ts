@@ -4,7 +4,7 @@ import { CyberPhysicalSystem } from '../cps/cyber.physical.system';
 import { Snapshot } from '../domain/snapshot.model';
 
 export class ReinforcementLearning implements Learning {
-    private readonly pathToModel = 'file://model';
+    private readonly pathToModel = 'file://model/reinforced';
     private readonly nrOfInputs: number = 4;
     private readonly nrOfActions: number = 3;
     private readonly timeSeries: number = 8;
@@ -65,7 +65,7 @@ export class ReinforcementLearning implements Learning {
      * @returns Promse<void>
      */
     public async train(snapshots: Snapshot[]): Promise<void> {
-        const cpsOriginal: CyberPhysicalSystem = CyberPhysicalSystem.make(snapshots, 10, 40, 15);
+        const cpsOriginal: CyberPhysicalSystem = await CyberPhysicalSystem.make(snapshots, false);
         let epsilon = 0.1;
 
         for (let i = 0; i < 600; i++) {

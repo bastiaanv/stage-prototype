@@ -5,7 +5,7 @@ import { Normalization } from '../math/normalization.math';
 import { Snapshot } from '../domain/snapshot.model';
 
 export class SupervisedLearning implements Learning {
-    private readonly pathToModel = 'file://model';
+    private readonly pathToModel = 'file://model/supervised';
     private readonly nrOfInputs: number = 1;
     private readonly nrOfActions: number = 3;
     private readonly timeSeries: number = 8;

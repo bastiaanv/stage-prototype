@@ -1,20 +1,14 @@
 import { Snapshot } from '../domain/snapshot.model';
 import { Normalization } from '../math/normalization.math';
-import { Trainer } from '../math/trainer.math';
 import { RewardSystem } from '../reward/reward.system';
 import { MemoryCPS, MemoryData } from './memory.cyber.physical.system';
+import { TemperatureApproach } from '../tensorflow/temperature.approach';
 
 // Formula: Tdot = T - a + Uh * (Tdh + a) + Uc * (Tdc + a)
 export class CyberPhysicalSystem {
     private readonly memory                 = new MemoryCPS();
     private readonly historicData           : Snapshot[];
 
-    private readonly deltaPasiveCooling:    number;     // a
-    private readonly deltaActiveHeating:    number;     // Tdh
-    private readonly deltaActiveCooling:    number;     // Tdc
-    private readonly heatingTemperature:    number;     // Tmaxh
-    private readonly coolingTemperature:    number;     // Tminc
-    private readonly outsideTemp:           number;     // Tminp
     private currentTemp:                    number = 0; // T
     private currentDate:                    Date = new Date();
 
@@ -43,22 +37,20 @@ export class CyberPhysicalSystem {
     // private readonly rewardSystemTemperature =  new TemperatureReward();
     private readonly rewardSystemControl =      new RewardSystem();
 
-    private constructor(deltaPasiveCooling: number, outsideTemp: number, deltaActiveHeating: number, deltaActiveCooling: number, heatingTemp: number, coolingTemp: number, snapshots: Snapshot[]) {
-        this.deltaPasiveCooling = deltaPasiveCooling;
-        this.outsideTemp        = outsideTemp;
-        this.deltaActiveHeating = deltaActiveHeating;
-        this.deltaActiveCooling = deltaActiveCooling;
-        this.heatingTemperature = heatingTemp;
-        this.coolingTemperature = coolingTemp;
+    private constructor(model: TemperatureApproach, snapshots: Snapshot[]) {
         this.historicData = snapshots;
     }
 
-    public static make(snapshots: Snapshot[], outsideTemp: number, heatingTemp: number, coolingTemp: number): CyberPhysicalSystem {
-        const deltaPassiveCooling   = Trainer.calculatePassiveCooling(snapshots);
-        const deltaActiveHeating    = Trainer.calculateActiveHeating(snapshots);
-        const deltaActiveCooling    = Trainer.calculateActiveCooling(snapshots);
+    public static async make(snapshots: Snapshot[], loadModel: boolean): Promise<CyberPhysicalSystem> {
+        const model = new TemperatureApproach();
+        if (!loadModel) {
+            await model.train(snapshots)
+        
+        } else {
+            await model.load();
+        }
 
-        return new CyberPhysicalSystem(deltaPassiveCooling, outsideTemp, deltaActiveHeating, deltaActiveCooling, heatingTemp, coolingTemp, snapshots);
+        return new CyberPhysicalSystem(model, snapshots);
     }
 
     public step(action: number): void {
@@ -74,20 +66,8 @@ export class CyberPhysicalSystem {
             action,
         });
 
-        // Calculate new temperature
-        this.currentTemp =  this.calculatePassiveCooling() +
-                            this.calculateActiveHeating(action === 1) +
-                            this.calculateActiveCooling(action === 2);
-
-        if (action === 1 && this.currentTemp > this.heatingTemperature) {
-            this.currentTemp = this.heatingTemperature;
-
-        } else if (action === 2 && this.currentTemp < this.coolingTemperature) {
-            this.currentTemp = this.coolingTemperature;
-
-        } else if (action === 0 && this.currentTemp < this.outsideTemp) {
-            this.currentTemp = this.outsideTemp;
-        }
+        // TODO: Calculate new temperature
+        
 
         // Increase time with 15 minutes
         this.currentDate.setMinutes(this.currentDate.getMinutes() + 15);
@@ -115,17 +95,5 @@ export class CyberPhysicalSystem {
         for (let i = 0; i < timeSerieLength; i++) {
             this.step(0);
         }
-    }
-
-    private calculatePassiveCooling(): number {
-        return this.currentTemp - this.deltaPasiveCooling;
-    }
-
-    private calculateActiveHeating(actionHeating: boolean): number {
-        return (actionHeating ? 1 : 0) * (this.deltaActiveHeating + this.deltaPasiveCooling);
-    }
-
-    private calculateActiveCooling(actionCooling: boolean): number {
-        return (actionCooling ? 1 : 0) * (this.deltaPasiveCooling - this.deltaActiveCooling);
     }
 }
