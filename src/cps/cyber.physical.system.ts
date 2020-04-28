@@ -4,7 +4,6 @@ import { RewardSystem } from '../reward/reward.system';
 import { MemoryCPS, MemoryData } from './memory.cyber.physical.system';
 import { TemperatureApproach } from '../tensorflow/temperature.approach';
 
-// Formula: Tdot = T - a + Uh * (Tdh + a) + Uc * (Tdc + a)
 export class CyberPhysicalSystem {
     private readonly memory                 = new MemoryCPS();
     private readonly historicData           : Snapshot[];
