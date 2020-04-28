@@ -36,7 +36,7 @@ export class TemperatureApproach implements Learning {
 
     public async predict(snapshot: Snapshot): Promise<tf.backend_util.TypedArray> {
         return (tf.tidy(() =>
-                        this.model.predict(tf.tensor([
+                        this.model.predict(tf.tensor([[
                             snapshot.temperature,
                             snapshot.outside!.temperature,
                             snapshot.outside!.solarRadiation,
@@ -46,7 +46,7 @@ export class TemperatureApproach implements Learning {
                             snapshot.outside!.rainfall,
                             snapshot.heatingPercentage,
                             snapshot.coolingPercentage,
-                        ]))
+                        ]]))
                     ) as tf.Tensor<tf.Rank>).data();
     }
 

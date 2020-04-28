@@ -47,6 +47,7 @@ export class CyberPhysicalSystem {
         const model = new TemperatureApproach();
         if (!loadModel) {
             await model.train(snapshots)
+            await model.save();
         
         } else {
             await model.load();
