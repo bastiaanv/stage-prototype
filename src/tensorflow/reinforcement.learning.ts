@@ -92,12 +92,12 @@ export class ReinforcementLearning implements Learning {
                 }
 
                 // Do action and get reward for NN and update actual array
-                cps.step(actions[0]);
+                await cps.step(actions[0]);
                 actual[actions[0]] = cps.getReward();
 
                 // Train NN
                 const label = tf.tensor([actual]);
-                await this.model.fit(tempTensor, label, { epochs: 5, verbose: 1 });
+                await this.model.fit(tempTensor, label, { epochs: 5, verbose: 0 });
 
                 // Dispose remaining tensors
                 tempTensor.dispose();

@@ -11,6 +11,7 @@ export class CyberPhysicalSystem {
 
     private currentTemp:                    number = 0; // T
     private currentDate:                    Date = new Date();
+    private readonly model:                 TemperatureApproach;
 
     private getLastData():                  MemoryData {
         return this.memory.getLastData(1)[0];
@@ -38,6 +39,7 @@ export class CyberPhysicalSystem {
     private readonly rewardSystemControl =      new RewardSystem();
 
     private constructor(model: TemperatureApproach, snapshots: Snapshot[]) {
+        this.model = model;
         this.historicData = snapshots;
     }
 
@@ -53,7 +55,7 @@ export class CyberPhysicalSystem {
         return new CyberPhysicalSystem(model, snapshots);
     }
 
-    public step(action: number): void {
+    public async step(action: number): Promise<void> {
         if (action > 3) {
             throw new Error('Action does not match actions available...');
         }
@@ -66,8 +68,17 @@ export class CyberPhysicalSystem {
             action,
         });
 
-        // TODO: Calculate new temperature
-        
+        // Calculate new temperature
+        const data: Snapshot = {
+            temperature: this.currentTemp,
+            when: new Date(this.currentDate.getTime()),
+            coolingPercentage: action === 2 ? 1 : 0,
+            heatingPercentage: action === 1 ? 1 : 0,
+            outside: this.historicData.find(x => x.when.getTime() === this.currentDate.getTime())!.outside!,
+        }
+        this.currentTemp = (await this.model.predict(data))[0];
+        console.log(data);
+        console.log(this.currentTemp);
 
         // Increase time with 15 minutes
         this.currentDate.setMinutes(this.currentDate.getMinutes() + 15);

@@ -59,8 +59,6 @@ export class TemperatureApproach implements Learning {
                 callbacks: tf.node.tensorBoard(resolve(__dirname, '..', '..', 'tensorboard', 'linearRegression', 'logs')),
             }
         );
-
-        throw new Error('Lol niet verder gaan');
     }
 
     private prepareDataset(snapshots: Snapshot[]) {
