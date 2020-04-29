@@ -4,18 +4,18 @@ import { Learning } from './learning.interface';
 import { resolve } from 'path';
 
 /**
- * Uses linear regression to approach the new room temperature.
- * It utilizes the following formula for the linear regression: y = bias + X1*W1 + X2*W2 + ... + Xi*Wi
+ * Uses MLP to approach the new room temperature.
  */
 export class TemperatureApproach implements Learning {
-    private readonly path = 'file://model/linearRegression';
+    private readonly path = 'file://model/mlp';
     private model: tf.LayersModel;
 
     constructor() {
         this.model = tf.sequential({
             layers: [
-                tf.layers.dense({inputShape: [1, 9], units: 9, useBias: false, activation: 'linear'}),
-                tf.layers.dense({units: 1, activation: 'linear'}),
+                tf.layers.dense({inputShape: [9], units: 9, activation: 'relu', name: 'input_layer'}),
+                tf.layers.dense({units: 5}),
+                tf.layers.dense({units: 1, activation: 'relu'}),
             ]
         });
 
@@ -36,7 +36,7 @@ export class TemperatureApproach implements Learning {
 
     public async predict(snapshot: Snapshot): Promise<tf.backend_util.TypedArray> {
         return (tf.tidy(() =>
-                        this.model.predict(tf.tensor([[[
+                        this.model.predict(tf.tensor([[
                             snapshot.temperature,
                             snapshot.outside!.temperature,
                             snapshot.outside!.solarRadiation,
@@ -46,7 +46,7 @@ export class TemperatureApproach implements Learning {
                             snapshot.outside!.rainfall,
                             snapshot.heatingPercentage,
                             snapshot.coolingPercentage,
-                        ]]]))
+                        ]]))
                     ) as tf.Tensor<tf.Rank>).data();
     }
 

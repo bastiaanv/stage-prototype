@@ -11,13 +11,13 @@ export interface Learning {
     predict(data: number[][] | Snapshot): Promise<tf.backend_util.TypedArray>;
 
     /**
-     * Loads the model from location: 'ROOT_FOLDER/model/{reinforced | supervised | linearRegression}'
+     * Loads the model from location: 'ROOT_FOLDER/model/{reinforced | supervised | mlp}'
      * @returns Promise<void>. When no exception has been throw, the training was successful
      */
     load(): Promise<void>;
 
     /**
-     * Saves the model to: 'ROOT_FOLDER/model/{reinforced | supervised | linearRegression}'
+     * Saves the model to: 'ROOT_FOLDER/model/{reinforced | supervised | mlp}'
      * @returns Promise<void>. When no exception has been throw, the training was successful
      */
     save(): Promise<void>;
