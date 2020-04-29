@@ -21,7 +21,6 @@ export class TemperatureApproach implements Learning {
 
         this.model.compile({
             optimizer: tf.train.adam(),
-            metrics: [tf.metrics.precision],
             loss: tf.metrics.MSE,
         });
     }

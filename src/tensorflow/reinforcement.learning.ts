@@ -47,7 +47,7 @@ export class ReinforcementLearning implements Learning {
     }
 
     public async train(snapshots: Snapshot[]): Promise<void> {
-        const cpsOriginal: CyberPhysicalSystem = await CyberPhysicalSystem.make(snapshots, true);
+        const cpsOriginal: CyberPhysicalSystem = await CyberPhysicalSystem.make(snapshots, false);
         let epsilon = 0.1;
 
         for (let i = 0; i < 600; i++) {
