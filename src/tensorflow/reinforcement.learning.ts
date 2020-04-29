@@ -6,6 +6,8 @@ import { Snapshot } from '../domain/snapshot.model';
 export class ReinforcementLearning implements Learning {
     private readonly pathToModel = 'file://model';
     private readonly nrOfInputs: number = 4;
+    // TODO: output uitbreiden voor 20% interval verwarmen.
+    // IDEE: Discreet bepalen of er verwarmt moet worden daarna met regression bepalen hoe hard er verwarmt moet worden 
     private readonly nrOfActions: number = 3;
     private readonly timeSeries: number = 8;
 
