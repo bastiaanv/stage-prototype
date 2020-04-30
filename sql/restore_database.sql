@@ -2,7 +2,7 @@
 
 USE [master]
 RESTORE DATABASE TCH_BREIJER
-FROM DISK = '/TCH_Breijer.bak'
+FROM DISK = '/var/opt/mssql//TCH_Breijer.bak'
 WITH
   FILE = 1,
   NOUNLOAD,

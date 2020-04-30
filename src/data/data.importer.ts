@@ -23,16 +23,6 @@ export class DataImporter {
                     console.error('Connection failed.', err);
                     reject(err);
                 } else {
-
-                    // Check if function for cooling normalization exists. If not, it will be created
-                    const checkFunction = `SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[FS\\GBS].[CoolingFunction]') AND type = N'FN'`;
-                    const request = new sql.Request(this.database);
-
-                    if((await request.query(checkFunction)).recordset.length !== 1) {
-                        const createFunction = `CREATE FUNCTION [FS\\GBS].CoolingFunction(@val1 int) RETURNS INT AS BEGIN if @val1 > 1 return 1 return @val1 END;`;
-                        await request.query(createFunction);
-                    }
-
                     console.log('connected!!');
                     resolve();
                 }
@@ -78,8 +68,8 @@ export class DataImporter {
         const query = ` SELECT
                             DATEADD(MINUTE, DATEDIFF(MINUTE, '2000', t.[Systeemtijd]) / 15 * 15, '2000') AS 'when',
                             CAST(AVG(t.Waarde) AS FLOAT) / 10 AS 'temperature',
-                            MAX(h.Waarde) AS 'heatingPercentage',
-                            [FS\\GBS].CoolingFunction(MAX(c.Waarde)) AS coolingPercentage
+                            CAST(MAX(h.Waarde) AS FLOAT) / 10000 AS 'heatingPercentage',
+                            CAST(MAX(c.Waarde) AS FLOAT) / 10000 AS 'coolingPercentage'
                         FROM [FS\\GBS].${process.env.TABLE_TEMP} AS t
                         INNER JOIN [FS\\GBS].${process.env.TABLE_COOLING} AS c ON t.Systeemtijd = c.Systeemtijd
                         INNER JOIN [FS\\GBS].${process.env.TABLE_HEATING} AS h ON t.Systeemtijd = h.Systeemtijd
