@@ -2,12 +2,14 @@ import * as tf from '@tensorflow/tfjs-node-gpu';
 import { Snapshot } from '../domain/snapshot.model';
 import { Learning } from './learning.interface';
 import { resolve } from 'path';
+import { existsSync, mkdirSync } from 'fs';
 
 /**
  * Uses MLP to approach the new room temperature.
  */
 export class TemperatureApproach implements Learning {
     private readonly path = 'file://model/mlp';
+    private readonly pathAbsolute = resolve(__dirname, '..', '..', 'model', 'mlp');
     private model: tf.LayersModel;
 
     constructor() {
@@ -21,6 +23,7 @@ export class TemperatureApproach implements Learning {
 
         this.model.compile({
             optimizer: tf.train.adam(),
+            metrics: [tf.metrics.meanAbsolutePercentageError],
             loss: tf.metrics.MSE,
         });
     }
@@ -30,7 +33,11 @@ export class TemperatureApproach implements Learning {
     }
 
     public async save(): Promise<void> {
-        this.model.save(this.path);
+        if (!existsSync(this.pathAbsolute)) {
+            mkdirSync(this.pathAbsolute, { recursive: true });
+        }
+
+        await this.model.save(this.path);
     }
 
     public async predict(snapshot: Snapshot): Promise<tf.backend_util.TypedArray> {
@@ -88,6 +95,6 @@ export class TemperatureApproach implements Learning {
             throw new Error('Dataset is empty... Please make sure that KNMI data is included in the snapshot model');
         }
 
-        return tf.data.array(dataset).repeat(3).shuffle(snapshots.length, undefined, true).batch(snapshots.length/2);
+        return tf.data.array(dataset).repeat(3).shuffle(dataset.length, undefined, true).batch(dataset.length/2);
     }
 }

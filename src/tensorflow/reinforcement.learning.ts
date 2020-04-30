@@ -2,9 +2,12 @@ import * as tf from '@tensorflow/tfjs-node-gpu';
 import { Learning } from './learning.interface';
 import { CyberPhysicalSystem } from '../cps/cyber.physical.system';
 import { Snapshot } from '../domain/snapshot.model';
+import { resolve } from 'path';
+import { existsSync, mkdirSync } from 'fs';
 
 export class ReinforcementLearning implements Learning {
     private readonly pathToModel = 'file://model/reinforced';
+    private readonly pathAbsolute = resolve(__dirname, '..', '..', 'model', 'reinforced');
     private readonly nrOfInputs: number = 4;
     // TODO: output uitbreiden voor 20% interval verwarmen.
     // IDEE: Discreet bepalen of er verwarmt moet worden daarna met regression bepalen hoe hard er verwarmt moet worden 
@@ -27,6 +30,10 @@ export class ReinforcementLearning implements Learning {
     }
 
     public async save(): Promise<void> {
+        if (!existsSync(this.pathAbsolute)) {
+            mkdirSync(this.pathAbsolute, { recursive: true });
+        }
+
         await this.model.save(this.pathToModel);
     }
 

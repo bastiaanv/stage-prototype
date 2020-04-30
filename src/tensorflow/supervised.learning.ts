@@ -1,11 +1,13 @@
 import * as tf from '@tensorflow/tfjs-node-gpu';
 import { resolve } from 'path';
+import { existsSync, mkdirSync } from 'fs';
 import { Learning } from './learning.interface';
 import { Normalization } from '../math/normalization.math';
 import { Snapshot } from '../domain/snapshot.model';
 
 export class SupervisedLearning implements Learning {
     private readonly pathToModel = 'file://model/supervised';
+    private readonly pathAbsolute = resolve(__dirname, '..', '..', 'model', 'supervised');
     private readonly nrOfInputs: number = 1;
     private readonly nrOfActions: number = 3;
     private readonly timeSeries: number = 8;
@@ -26,6 +28,10 @@ export class SupervisedLearning implements Learning {
     }
 
     public async save(): Promise<void> {
+        if (!existsSync(this.pathAbsolute)) {
+            mkdirSync(this.pathAbsolute, { recursive: true });
+        }
+
         await this.model.save(this.pathToModel);
     }
 
