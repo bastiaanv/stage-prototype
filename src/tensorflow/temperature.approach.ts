@@ -66,20 +66,26 @@ export class TemperatureApproach implements Learning {
             const snapshot = snapshots[i];
             const nextSnapshot = snapshots[i+1];
 
-            dataset.push({
-                xs: tf.tensor([
-                    snapshot.temperature,
-                    snapshot.outside!.temperature,
-                    snapshot.outside!.solarRadiation,
-                    snapshot.outside!.humidity,
-                    snapshot.outside!.windSpeed,
-                    snapshot.outside!.windDirection,
-                    snapshot.outside!.rainfall,
-                    snapshot.heatingPercentage,
-                    snapshot.coolingPercentage,
-                ]),
-                ys: tf.tensor([nextSnapshot.temperature])
-            });
+            if (snapshot.outside) {
+                dataset.push({
+                    xs: tf.tensor([
+                        snapshot.temperature,
+                        snapshot.outside!.temperature,
+                        snapshot.outside!.solarRadiation,
+                        snapshot.outside!.humidity,
+                        snapshot.outside!.windSpeed,
+                        snapshot.outside!.windDirection,
+                        snapshot.outside!.rainfall,
+                        snapshot.heatingPercentage,
+                        snapshot.coolingPercentage,
+                    ]),
+                    ys: tf.tensor([nextSnapshot.temperature])
+                });
+            }
+        }
+
+        if (dataset.length === 0) {
+            throw new Error('Dataset is empty... Please make sure that KNMI data is included in the snapshot model');
         }
 
         return tf.data.array(dataset).repeat(3).shuffle(snapshots.length, undefined, true).batch(snapshots.length/2);

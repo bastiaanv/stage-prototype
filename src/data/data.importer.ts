@@ -2,6 +2,9 @@ import * as sql from 'mssql';
 import { Snapshot } from '../domain/snapshot.model';
 import { readFileSync } from 'fs';
 import * as path from 'path';
+import { request, RequestOptions } from 'http';
+import { soap } from 'strong-soap';
+import moment from 'moment';
 
 export class DataImporter {
     private database?: sql.ConnectionPool = undefined;
@@ -16,6 +19,9 @@ export class DataImporter {
         },
     };
 
+    /**
+     * Connects to the database
+     */
     public connect(): Promise<void> {
         return new Promise((resolve, reject) => {
             this.database = new sql.ConnectionPool(this.config, async (err) => {
@@ -30,16 +36,87 @@ export class DataImporter {
         });
     }
 
+    /**
+     * Disconnects from the database
+     */
     public disconnect() {
         return this.database?.close();
     }
 
+    /**
+     * Gets the data from the database (Priva history data) and SOA-Service (KNMI data)
+     */
     public async getSnapshots(): Promise<Snapshot[]> {
         const data = await this.getDataFromDB();
-        return this.readClimatData(data);
+
+        // Check if SOA-Service is available, otherwise use csv file in this project. This address is only available within the Facilicom network
+        return this.httpRequest({method: 'HEAD', host: process.env.SOA_SERVICE_HOST}).then(() => {
+            return this.readFromSoap(data);
+
+        }).catch(() => {
+            return this.readFromCsv(data);
+        });
     }
 
-    private readClimatData(data: Snapshot[]): Snapshot[] {
+    private readFromSoap(data: Snapshot[]): Promise<Snapshot[]> {
+        return new Promise<Snapshot[]>((resolve, reject) => {
+            soap.createClient(`${process.env.SOA_SERVICE_HOST}/VolumeService/VolumeService.svc?singleWsdl`, {}, async (err, client) => {
+                if (err) {
+                    reject(err);
+                }
+            
+                const getClimateData: (options: any) => { GetClimateDataResult: { MeasureDataResponseMessage: {PeriodEnd: Date, PeriodStart: Date, Volume: number}[] } } = client['VolumeServiceHandler']['BasicHttpBinding_IVolumeService']['GetClimateData'];
+                const postalCode = '3007GA';
+                const start = moment(data[0].when).format('YYYY-MM-DDTHH:mm:ss');
+                const end = moment(data[data.length-1].when).format('YYYY-MM-DDTHH:mm:ss');
+                
+                const [
+                    temp,
+                    solarRadiation,
+                    humidity,
+                    windSpeed,
+                    windDirection,
+                    rainfall
+                ] = await Promise.all([
+                    getClimateData(generateParams('Temperatuur', start, end, postalCode)),
+                    getClimateData(generateParams('Globale_straling', start, end, postalCode)),
+                    getClimateData(generateParams('Relatieve_vochtigheid', start, end, postalCode)),
+                    getClimateData(generateParams('Uurgemiddelde_windsnelheid', start, end, postalCode)),
+                    getClimateData(generateParams('Windrichting', start, end, postalCode)),
+                    getClimateData(generateParams('Uursom_neerslag', start, end, postalCode)),
+                ]);
+            
+                for (let i = 0; i < data.length; i++) {
+                    const index = temp.GetClimateDataResult.MeasureDataResponseMessage.findIndex(x => x.PeriodStart.getTime() === data[i].when.getTime());
+                    
+                    data[i].outside = {
+                        temperature: temp.GetClimateDataResult.MeasureDataResponseMessage[index].Volume,
+                        solarRadiation: solarRadiation.GetClimateDataResult.MeasureDataResponseMessage[index].Volume,
+                        humidity: humidity.GetClimateDataResult.MeasureDataResponseMessage[index].Volume,
+                        windSpeed: windSpeed.GetClimateDataResult.MeasureDataResponseMessage[index].Volume,
+                        windDirection: windDirection.GetClimateDataResult.MeasureDataResponseMessage[index].Volume,
+                        rainfall: rainfall.GetClimateDataResult.MeasureDataResponseMessage[index].Volume,
+                    };
+                }
+
+                resolve(data);
+            });
+        });
+
+        function generateParams(type: string, start: string, end: string, postalCode: string) {
+            return {
+                message: {
+                    LocationID: null,
+                    PostalCode: postalCode,
+                    PeriodStart: start,
+                    PeriodEnd: end,
+                    ClimateType: type,
+                } 
+            };
+        }
+    }
+
+    private readFromCsv(data: Snapshot[]): Snapshot[] {
         const csvString = readFileSync(path.resolve(__dirname, 'csv', 'data.csv')).toString();
 
         for (const row of csvString.split('\n')) {
@@ -80,5 +157,26 @@ export class DataImporter {
 
         const request = new sql.Request(this.database);
         return (await request.query(query)).recordset as Snapshot[];
+    }
+
+    /**
+     * The method can be used to test a connection to a REST/SOAP service. Mostly used to test if a Facilicom service is reachable from the current location
+     * @param requestOptions
+     * @returns Promise<void> when successful returns a void, when fails it throws an exception
+     */
+    private httpRequest(requestOptions: RequestOptions): Promise<void> {
+        return new Promise(function(resolve, reject) {
+            const req = request(requestOptions, (res) => {
+                res.on('end', function() {
+                    resolve();
+                });
+            });
+
+            req.on('error', function(err) {
+                reject(err);
+            });
+
+            req.end();
+        });
     }
 }

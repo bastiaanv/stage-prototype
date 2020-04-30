@@ -14,7 +14,9 @@
     "@tensorflow/tfjs-node-gpu": "^1.7.0",
     "@types/mssql": "^6.0.0",
     "dotenv": "^8.2.0",
-    "mssql": "^6.2.0"
+    "moment": "^2.24.0",
+    "mssql": "^6.2.0",
+    "strong-soap": "^2.0.0"
   },
   "devDependencies": {
     "@istanbuljs/nyc-config-typescript": "^1.0.1",
