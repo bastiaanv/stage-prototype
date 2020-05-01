@@ -8,7 +8,7 @@ import { existsSync, mkdirSync } from 'fs';
 export class ReinforcementLearning implements Learning {
     private readonly pathToModel = 'file://model/reinforced';
     private readonly pathAbsolute = resolve(__dirname, '..', '..', 'model', 'reinforced');
-    private readonly nrOfInputs: number = 4;
+    private readonly nrOfInputs: number = CyberPhysicalSystem.nrOfDataPoints;
     // TODO: output uitbreiden voor 20% interval verwarmen.
     // IDEE: Discreet bepalen of er verwarmt moet worden daarna met regression bepalen hoe hard er verwarmt moet worden 
     private readonly nrOfActions: number = 3;
@@ -19,13 +19,12 @@ export class ReinforcementLearning implements Learning {
     constructor() {
         const input = tf.input({shape: [this.timeSeries, this.nrOfInputs], name: 'Input'});
         const lstm1 = tf.layers.lstm({units: 8, activation: 'relu',}).apply(input);
-        const output = tf.layers.dense({units: this.nrOfActions, activation: 'softmax', name: 'output'}).apply(lstm1) as tf.SymbolicTensor;
+        const output = tf.layers.dense({units: this.nrOfActions, name: 'output'}).apply(lstm1) as tf.SymbolicTensor;
         this.model = tf.model({inputs: input, outputs: output});
 
         this.model.compile({
             optimizer: tf.train.adam(),
-            metrics: [tf.metrics.categoricalAccuracy],
-            loss: tf.metrics.categoricalCrossentropy,
+            loss: this.bellmanEquationLossFunction,
         });
     }
 
@@ -60,40 +59,41 @@ export class ReinforcementLearning implements Learning {
         let epsilon = 0.1;
 
         for (let i = 0; i < 600; i++) {
-            // Make deep copy of CPS. This way we do not have to reinitialize the class each iteration, using the trainers and optimizers
+            // Make deep copy of CPS. This way we do not have to reinitialize the class each iteration, using the trainers, models and optimizers
             const cps: CyberPhysicalSystem = Object.assign( Object.create( Object.getPrototypeOf(cpsOriginal) ), cpsOriginal );
-            cps.start(this.timeSeries);
+            await cps.start(this.timeSeries);
 
-            // Let it loop through one day
-            for (let j = 0; j < 96; j++) {
-                // Get temperature and date form Cyber-Physical System
-                const tempTensor = tf.tensor([[...cps.getDataFromMemory(this.timeSeries-1), cps.getCurrentData()]]);
+            // Let it loop through one day. 96 * 15 min = 24 hour
+            for (let j = 0; j < 20; j++) {
+                // Get data from the Cyber-Physical System
+                const inputTensor = tf.tensor([[...cps.getDataFromMemory(this.timeSeries-1), cps.getCurrentData()]]);
 
-                // Get the action from the NN
-                const actualTensor = tf.tidy(() => this.model.predict(tempTensor) as tf.Tensor);
-                const actionTensor = tf.tidy(() => actualTensor.argMax(1));
-                const [actions, actual] = await Promise.all([
+                // Get the action from the NN following the Deep Q Network (DQN) principle
+                const qValueTensor = tf.tidy(() => this.model.predict(inputTensor) as tf.Tensor);
+                const actionTensor = tf.tidy(() => qValueTensor.argMax(1));
+                const [actions, qValues] = await Promise.all([
                     actionTensor.data(),
-                    actualTensor.data(),
+                    qValueTensor.data(),
                 ]);
 
                 // If true, then perform random action instead of action that would be taken by the Neural Network
+                // And do the action
                 if (Math.random() < epsilon) {
                     actions[0] = Math.round(Math.random() * this.nrOfActions);
                 }
-
-                // Do action and get reward for NN and update actual array
                 await cps.step(actions[0]);
-                actual[actions[0]] = cps.getReward();
+
+                // Calculate correct value for the Bellman Equation: R + y * Q(s', a'). Where Q(s', a') is always zero
+                qValues[actions[0]] = cps.getReward();
 
                 // Train NN
-                const label = tf.tensor([actual]);
-                await this.model.fit(tempTensor, label, { epochs: 5, verbose: 1 });
+                const qValueOptimalTensor = tf.tensor([qValues]);
+                await this.model.fit(inputTensor, qValueOptimalTensor, { epochs: 5, verbose: 1 });
 
                 // Dispose remaining tensors
-                tempTensor.dispose();
-                label.dispose();
-                actualTensor.dispose();
+                inputTensor.dispose();
+                qValueOptimalTensor.dispose();
+                qValueTensor.dispose();
                 actionTensor.dispose();
             }
 
@@ -101,4 +101,12 @@ export class ReinforcementLearning implements Learning {
             epsilon = 1/( ( i/50 ) + 10 );
         }
     }
+
+    /**
+     * The loss function following the bellman expectation equation. cost = (Q(s, a) - (R + y * Q(s', a')))^2.
+     * The loss function is a more detailed MSE function
+     * @param yTrue The correct value following the formula: R + y * Q(s', a')
+     * @param yPred The predicted value following the formula: Q(s, a)
+     */
+    private bellmanEquationLossFunction = tf.losses.meanSquaredError;
 }

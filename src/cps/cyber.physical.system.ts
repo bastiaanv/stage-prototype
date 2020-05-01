@@ -7,6 +7,7 @@ import { TemperatureApproach } from '../tensorflow/temperature.approach';
 export class CyberPhysicalSystem {
     private readonly memory                 = new MemoryCPS();
     private readonly historicData           : Snapshot[];
+    public static readonly nrOfDataPoints   = 4;
 
     private currentTemp:                    number = 0; // T
     private currentDate:                    Date = new Date();
@@ -95,7 +96,7 @@ export class CyberPhysicalSystem {
         return Normalization.reward(reward, 1);
     }
 
-    public start(timeSerieLength: number): void {
+    public async start(timeSerieLength: number): Promise<void> {
         // Setup init values (temperature and dateTime)
         const date = new Date(this.historicData[0].when.getTime());
 
@@ -104,7 +105,7 @@ export class CyberPhysicalSystem {
 
         // Fill memory with init data
         for (let i = 0; i < timeSerieLength; i++) {
-            this.step(0);
+            await this.step(0);
         }
     }
 }
