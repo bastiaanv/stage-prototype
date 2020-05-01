@@ -47,18 +47,39 @@ export class DataImporter {
      * Gets the data from the database (Priva history data) and SOA-Service (KNMI data)
      */
     public async getSnapshots(): Promise<Snapshot[]> {
-        const data = await this.getDataFromDB();
+        let data = await this.getDataFromDB();
+        data = this.readOccupancyFromCsv(data);
 
         // Check if SOA-Service is available, otherwise use csv file in this project. This address is only available within the Facilicom network
         return this.httpRequest({method: 'HEAD', host: process.env.SOA_SERVICE_HOST}).then(() => {
-            return this.readFromSoap(data);
+            return this.readKNMIFromSoap(data);
 
         }).catch(() => {
-            return this.readFromCsv(data);
+            return this.readKNMIFromCsv(data);
         });
     }
 
-    private readFromSoap(data: Snapshot[]): Promise<Snapshot[]> {
+    private readOccupancyFromCsv(data: Snapshot[]): Snapshot[] {
+        const csvString = readFileSync(path.resolve(__dirname, 'csv', 'occupancy.csv')).toString();
+
+        const csvData: {begin: Date, end: Date}[] = [];
+        for (const row of csvString.split('\n')) {
+            if (row === '' || row === 'begin, end') {
+                continue;
+            }
+
+            const rowSplitted = row.split(',');
+            csvData.push({begin: new Date(rowSplitted[0]), end: new Date(rowSplitted[1])});
+        }
+        
+        data.forEach((x) => {
+            x.occupied = !!csvData.find((y) => y.begin.getTime() < x.when.getTime() && y.end.getTime() > x.when.getTime());
+        });
+
+        return data;
+    }
+
+    private readKNMIFromSoap(data: Snapshot[]): Promise<Snapshot[]> {
         return new Promise<Snapshot[]>((resolve, reject) => {
             soap.createClient(`${process.env.SOA_SERVICE_HOST}/VolumeService/VolumeService.svc?singleWsdl`, {}, async (err, client) => {
                 if (err) {
@@ -116,8 +137,8 @@ export class DataImporter {
         }
     }
 
-    private readFromCsv(data: Snapshot[]): Snapshot[] {
-        const csvString = readFileSync(path.resolve(__dirname, 'csv', 'data.csv')).toString();
+    private readKNMIFromCsv(data: Snapshot[]): Snapshot[] {
+        const csvString = readFileSync(path.resolve(__dirname, 'csv', 'knmi.csv')).toString();
 
         for (const row of csvString.split('\n')) {
             if (row === '' || row === 'when, temp, solar radiation, humidity, wind speed, wind direction, rainfall') {

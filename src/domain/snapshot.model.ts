@@ -1,6 +1,7 @@
 export interface Snapshot {
     when: Date;
     temperature: number;
+    occupied: boolean;
 
     /**
      * Datasource is KNMI with in between a Facilicom REST wrapper

@@ -17,6 +17,7 @@ dataImporter.connect().then(async () => {
     // Then we get the snapshots from the database and disconnect from the database
     const snapshots = await dataImporter.getSnapshots();
     await dataImporter.disconnect();
+    console.log(snapshots)
 
     const cps: CyberPhysicalSystem = await CyberPhysicalSystem.make(snapshots, false);
     await cps.start(9);

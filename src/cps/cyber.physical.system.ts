@@ -73,6 +73,7 @@ export class CyberPhysicalSystem {
         const data: Snapshot = {
             temperature: this.currentTemp,
             when: new Date(this.currentDate.getTime()),
+            occupied: false,
             coolingPercentage: action === 2 ? 1 : 0,
             heatingPercentage: action === 1 ? 1 : 0,
             outside: this.historicData.find(x => x.when.getTime() === this.currentDate.getTime())!.outside!,
