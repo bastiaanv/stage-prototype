@@ -88,7 +88,7 @@ export class ReinforcementLearning implements Learning {
 
                 // Train NN
                 const label = tf.tensor([actual]);
-                await this.model.fit(tempTensor, label, { epochs: 5, verbose: 0 });
+                await this.model.fit(tempTensor, label, { epochs: 5, verbose: 1 });
 
                 // Dispose remaining tensors
                 tempTensor.dispose();
