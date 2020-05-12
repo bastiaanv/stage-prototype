@@ -70,15 +70,18 @@ export class CyberPhysicalSystem {
         });
 
         // Calculate new temperature
+        const index = this.historicData.findIndex(x => x.when.getTime() === this.currentDate.getTime());
         const data: Snapshot = {
             temperature: this.currentTemp,
             when: new Date(this.currentDate.getTime()),
             occupied: false,
             coolingPercentage: action === 2 ? 1 : 0,
             heatingPercentage: action === 1 ? 1 : 0,
-            outside: this.historicData.find(x => x.when.getTime() === this.currentDate.getTime())!.outside!,
+            outside: this.historicData[index].outside!,
         }
-        this.currentTemp = (await this.model.predict(data))[0];
+        const preData: Snapshot = this.historicData[index-1];
+        const prePreData: Snapshot = this.historicData[index-2];
+        this.currentTemp = (await this.model.predict(data, preData.temperature, prePreData.temperature))[0];
         console.log(data);
         console.log(this.currentTemp);
 
@@ -99,7 +102,7 @@ export class CyberPhysicalSystem {
 
     public async start(timeSerieLength: number): Promise<void> {
         // Setup init values (temperature and dateTime)
-        const date = new Date(this.historicData[0].when.getTime());
+        const date = new Date(this.historicData[2].when.getTime());
 
         this.currentDate = date;
         this.currentTemp = Math.random() * 10 + 15;

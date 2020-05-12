@@ -1,13 +1,12 @@
 import * as tf from '@tensorflow/tfjs-node-gpu';
 import { Snapshot } from '../domain/snapshot.model';
-import { Learning } from './learning.interface';
 import { resolve } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 
 /**
  * Uses MLP to approach the new room temperature.
  */
-export class TemperatureApproach implements Learning {
+export class TemperatureApproach {
     private readonly path = 'file://model/mlp';
     private readonly pathAbsolute = resolve(__dirname, '..', '..', 'model', 'mlp');
     private model: tf.LayersModel;
@@ -15,7 +14,7 @@ export class TemperatureApproach implements Learning {
     constructor() {
         this.model = tf.sequential({
             layers: [
-                tf.layers.dense({inputShape: [9], units: 9, activation: 'relu', name: 'input_layer'}),
+                tf.layers.dense({inputShape: [12], units: 12, activation: 'relu', name: 'input_layer'}),
                 tf.layers.dense({units: 5}),
                 tf.layers.dense({units: 1, activation: 'relu'}),
             ]
@@ -23,8 +22,8 @@ export class TemperatureApproach implements Learning {
 
         this.model.compile({
             optimizer: tf.train.adam(),
-            metrics: [tf.metrics.meanAbsolutePercentageError],
-            loss: tf.metrics.MSE,
+            metrics: [tf.metrics.meanAbsolutePercentageError, tf.metrics.meanAbsoluteError, tf.metrics.mse],
+            loss: tf.metrics.meanAbsoluteError,
         });
     }
 
@@ -40,18 +39,21 @@ export class TemperatureApproach implements Learning {
         await this.model.save(this.path);
     }
 
-    public async predict(snapshot: Snapshot): Promise<tf.backend_util.TypedArray> {
+    public async predict(snapshot: Snapshot, preTemperature: number, prePreTemperature: number): Promise<tf.backend_util.TypedArray> {
         return (tf.tidy(() =>
                         this.model.predict(tf.tensor([[
                             snapshot.temperature,
+                            preTemperature,
+                            prePreTemperature,
+                            snapshot.heatingPercentage,
+                            snapshot.coolingPercentage,
+                            snapshot.occupied ? 1 : 0,
                             snapshot.outside!.temperature,
                             snapshot.outside!.solarRadiation,
                             snapshot.outside!.humidity,
                             snapshot.outside!.windSpeed,
                             snapshot.outside!.windDirection,
                             snapshot.outside!.rainfall,
-                            snapshot.heatingPercentage,
-                            snapshot.coolingPercentage,
                         ]]))
                     ) as tf.Tensor<tf.Rank>).data();
     }
@@ -60,7 +62,7 @@ export class TemperatureApproach implements Learning {
         await this.model.fitDataset(
             this.prepareDataset(snapshots),
             {
-                epochs: 600,
+                epochs: 2000,
                 verbose: 1,
                 callbacks: tf.node.tensorBoard(resolve(__dirname, '..', '..', 'tensorboard', 'linearRegression', 'logs')),
             }
@@ -69,7 +71,9 @@ export class TemperatureApproach implements Learning {
 
     private prepareDataset(snapshots: Snapshot[]) {
         const dataset: {xs: tf.Tensor, ys: tf.Tensor}[] = [];
-        for (let i = 0; i < snapshots.length - 1; i++) {
+        for (let i = 2; i < snapshots.length - 1; i++) {
+            const prePreSnapshot = snapshots[i-2];
+            const preSnapshot = snapshots[i-1];
             const snapshot = snapshots[i];
             const nextSnapshot = snapshots[i+1];
 
@@ -77,14 +81,17 @@ export class TemperatureApproach implements Learning {
                 dataset.push({
                     xs: tf.tensor([
                         snapshot.temperature,
+                        preSnapshot.temperature,
+                        prePreSnapshot.temperature,
+                        snapshot.heatingPercentage,
+                        snapshot.coolingPercentage,
+                        snapshot.occupied ? 1 : 0,
                         snapshot.outside!.temperature,
                         snapshot.outside!.solarRadiation,
                         snapshot.outside!.humidity,
                         snapshot.outside!.windSpeed,
                         snapshot.outside!.windDirection,
                         snapshot.outside!.rainfall,
-                        snapshot.heatingPercentage,
-                        snapshot.coolingPercentage,
                     ]),
                     ys: tf.tensor([nextSnapshot.temperature])
                 });

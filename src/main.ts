@@ -23,7 +23,7 @@ dataImporter.connect().then(async () => {
     await cps.start(9);
 
     for (let i = 0; i < 10; i++) {
-        await cps.step(1);
+        await cps.step(Math.floor(Math.random()*3));
     }
 
     // After that, we will train the NN
@@ -73,7 +73,7 @@ dataImporter.connect().then(async () => {
     //         [roomTemperature25, outsideTemperature, timeNormalized, dateNormalized],
     //     ]));
 
-    //     console.log(`Time took: ${Math.abs((new Date().getTime() - start.getTime()) / 1000)}sec, started: ${start.toISOString()}, time ended: ${new Date().toISOString()}`);
+    console.log(`Time took: ${Math.abs((new Date().getTime() - start.getTime()) / 1000)}sec, started: ${start.toISOString()}, time ended: ${new Date().toISOString()}`);
     // });
 
 }).catch(async (err) => {
