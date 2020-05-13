@@ -18,16 +18,9 @@ dataImporter.connect().then(async () => {
     const snapshots = await dataImporter.getSnapshots();
     await dataImporter.disconnect();
 
-    const cps: CyberPhysicalSystem = await CyberPhysicalSystem.make(snapshots, false);
-    await cps.start(9);
-
-    for (let i = 0; i < 10; i++) {
-        await cps.step(Math.floor(Math.random()*3));
-    }
-
     // After that, we will train the NN
-    // nn.train(snapshots).then(async () => {
-    //     await nn.save();
+    nn.train(snapshots).then(async () => {
+        await nn.save();
 
     //     // Lets check the accuracy of the NN
     //     // Form data = [RoomTemperature, OutsideTemperature, Time, Date]
@@ -73,7 +66,7 @@ dataImporter.connect().then(async () => {
     //     ]));
 
     console.log(`Time took: ${Math.abs((new Date().getTime() - start.getTime()) / 1000)}sec, started: ${start.toISOString()}, time ended: ${new Date().toISOString()}`);
-    // });
+    });
 
 }).catch(async (err) => {
     console.log(err);
