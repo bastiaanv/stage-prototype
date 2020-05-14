@@ -25,6 +25,7 @@ describe('Data generator', () => {
                     when: time1,
                     temperature: 19.45,
                     outside: null,
+                    occupied: false,
                     heatingPercentage: 0,
                     coolingPercentage: 0,
                 },
@@ -32,6 +33,7 @@ describe('Data generator', () => {
                     when: time2,
                     temperature: 19.4,
                     outside: null,
+                    occupied: false,
                     heatingPercentage: 0,
                     coolingPercentage: 0,
                 }

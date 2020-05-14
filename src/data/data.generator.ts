@@ -18,6 +18,7 @@ export class DataGenerator {
                 when: new Date(time.getTime()),
                 temperature: formula.next(),
                 outside: null,
+                occupied: false,
                 heatingPercentage: formula.isActivelyHeating() ? 1 : 0,
                 coolingPercentage: formula.isActivelyCooling() ? 1 : 0,
             });

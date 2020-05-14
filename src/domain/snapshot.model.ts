@@ -1,9 +1,10 @@
 export interface Snapshot {
     when: Date;
     temperature: number;
+    occupied: boolean;
 
     /**
-     * Datasource is KNMI with in between a Facilicom REST wrapper
+     * Datasource is KNMI with in between a Facilicom SOAP wrapper
      */
     outside: Outside | null;
 
@@ -13,7 +14,7 @@ export interface Snapshot {
 }
 
 /**
- * Datasource is KNMI with in between a Facilicom REST wrapper
+ * Datasource is KNMI with in between a Facilicom SOAP wrapper
  */
 export interface Outside {
     /**
