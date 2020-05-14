@@ -138,7 +138,7 @@ export class DataImporter {
     }
 
     private readKNMIFromCsv(data: Snapshot[]): Snapshot[] {
-        const csvString = readFileSync(path.resolve(__dirname, 'csv', 'knmi.csv')).toString();
+        const csvString = readFileSync(resolve(__dirname, 'csv', 'knmi.csv')).toString();
 
         for (const row of csvString.split('\n')) {
             if (row === '' || row === 'when, temp, solar radiation, humidity, wind speed, wind direction, rainfall') {
