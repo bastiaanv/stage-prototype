@@ -1,7 +1,7 @@
 import * as sql from 'mssql';
 import { Snapshot } from '../domain/snapshot.model';
 import { readFileSync } from 'fs';
-import * as path from 'path';
+import { resolve } from 'path';
 import { request, RequestOptions } from 'http';
 import { soap } from 'strong-soap';
 import moment from 'moment';
@@ -60,7 +60,7 @@ export class DataImporter {
     }
 
     private readOccupancyFromCsv(data: Snapshot[]): Snapshot[] {
-        const csvString = readFileSync(path.resolve(__dirname, 'csv', 'occupancy.csv')).toString();
+        const csvString = readFileSync(resolve(__dirname, 'csv', 'occupancy.csv')).toString();
 
         const csvData: {begin: Date, end: Date}[] = [];
         for (const row of csvString.split('\n')) {
