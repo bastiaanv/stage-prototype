@@ -52,9 +52,11 @@ export class DataImporter {
 
         // Check if SOA-Service is available, otherwise use csv file in this project. This address is only available within the Facilicom network
         return this.httpRequest(process.env.SOA_SERVICE_HOST!).then(() => {
+            console.log("cool")
             return this.readKNMIFromSoap(data);
 
         }).catch(() => {
+            console.log("fuck")
             return this.readKNMIFromCsv(data);
         });
     }
