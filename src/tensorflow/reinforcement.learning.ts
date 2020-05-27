@@ -57,6 +57,7 @@ export class ReinforcementLearning implements Learning {
     public async train(snapshots: Snapshot[]): Promise<void> {
         const cpsOriginal: CyberPhysicalSystem = await CyberPhysicalSystem.make(snapshots, false);
         let epsilon = 0.1;
+        const discountFactor = 0.99;
 
         for (let i = 0; i < 600; i++) {
             // Make deep copy of CPS. This way we do not have to reinitialize the class each iteration, using the trainers, models and optimizers
@@ -83,8 +84,16 @@ export class ReinforcementLearning implements Learning {
                 }
                 await cps.step(actions[0]);
 
-                // Calculate correct value for the Bellman Equation: R + y * Q(s', a'). Where Q(s', a') is always zero
-                qValues[actions[0]] = cps.getReward();
+                const inputNextTensor = tf.tensor([[...cps.getDataFromMemory(this.timeSeries-1), cps.getCurrentData()]]);
+
+                // Get the next action from the NN
+                const qValueNextTensor = tf.tidy(() => this.model.predict(inputNextTensor) as tf.Tensor).max(1);
+                const [qValuesNext] = await Promise.all([
+                    qValueNextTensor.data(),
+                ]);
+
+                // Calculate correct value for the Bellman Equation: R + y * Q(s', a')
+                qValues[actions[0]] = cps.getReward() + discountFactor * qValuesNext[0];
 
                 // Train NN
                 const qValueOptimalTensor = tf.tensor([qValues]);
@@ -92,8 +101,10 @@ export class ReinforcementLearning implements Learning {
 
                 // Dispose remaining tensors
                 inputTensor.dispose();
+                inputNextTensor.dispose();
                 qValueOptimalTensor.dispose();
                 qValueTensor.dispose();
+                qValueNextTensor.dispose();
                 actionTensor.dispose();
             }
 
