@@ -2,9 +2,9 @@ import * as sql from 'mssql';
 import { Snapshot } from '../domain/snapshot.model';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
-import { request, RequestOptions } from 'http';
 import { soap } from 'strong-soap';
 import moment from 'moment';
+import axios from 'axios';
 
 export class DataImporter {
     private database?: sql.ConnectionPool = undefined;
@@ -51,7 +51,7 @@ export class DataImporter {
         data = this.readOccupancyFromCsv(data);
 
         // Check if SOA-Service is available, otherwise use csv file in this project. This address is only available within the Facilicom network
-        return this.httpRequest({method: 'HEAD', host: process.env.SOA_SERVICE_HOST, port: +process.env.SOA_SERVICE_PORT!}).then(() => {
+        return this.httpRequest(process.env.SOA_SERVICE_HOST!).then(() => {
             return this.readKNMIFromSoap(data);
 
         }).catch(() => {
@@ -185,23 +185,20 @@ export class DataImporter {
      * @param requestOptions
      * @returns Promise<void> when successful returns a void, when fails it throws an exception
      */
-    private httpRequest(requestOptions: RequestOptions): Promise<void> {
-        return new Promise(function(resolve, reject) {
-            const req = request(requestOptions, (res) => {
-                res.on('end', () => {
+    private httpRequest(url: string): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            axios.head(url).then(() => {
+                resolve();
+            }).catch((err) => {
+                // A connection could be made, but the request just failed, which is fine
+                if (err.status) {
                     resolve();
-                });
-
-                res.on('error', () => {
-                    resolve();
-                })
+                
+                // It was not possible to establish a connection, so the request is rejected by the linfosys firewall
+                } else {
+                    reject();
+                }
             });
-
-            req.on('error', function(err) {
-                reject(err);
-            });
-
-            req.end();
         });
     }
 }
