@@ -51,7 +51,7 @@ export class DataImporter {
         data = this.readOccupancyFromCsv(data);
 
         // Check if SOA-Service is available, otherwise use csv file in this project. This address is only available within the Facilicom network
-        return this.httpRequest({method: 'HEAD', host: process.env.SOA_SERVICE_HOST}).then(() => {
+        return this.httpRequest({method: 'HEAD', host: process.env.SOA_SERVICE_HOST, port: +process.env.SOA_SERVICE_PORT!}).then(() => {
             return this.readKNMIFromSoap(data);
 
         }).catch(() => {
@@ -188,9 +188,13 @@ export class DataImporter {
     private httpRequest(requestOptions: RequestOptions): Promise<void> {
         return new Promise(function(resolve, reject) {
             const req = request(requestOptions, (res) => {
-                res.on('end', function() {
+                res.on('end', () => {
                     resolve();
                 });
+
+                res.on('error', () => {
+                    resolve();
+                })
             });
 
             req.on('error', function(err) {
