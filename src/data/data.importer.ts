@@ -193,7 +193,7 @@ export class DataImporter {
                 resolve();
             }).catch((err) => {
                 // A connection could be made, but the request just failed, which is fine
-                if (err.status) {
+                if (err.response.status) {
                     resolve();
                 
                 // It was not possible to establish a connection, so the request is rejected by the linfosys firewall
