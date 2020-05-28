@@ -124,12 +124,9 @@ export class DataImporter {
                             rainfall: rainfall.result.GetClimateDataResult.MeasureDataResponseMessage[index].Volume,
                         };
                     }
-                    else {
-                        console.log(data[i]);
-                    }
                 }
 
-                resolve(data);
+                resolve(data.filter(x => !!x.outside));
             });
         });
 
