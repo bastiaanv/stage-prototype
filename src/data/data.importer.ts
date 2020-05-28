@@ -90,7 +90,7 @@ export class DataImporter {
 
                 client.setEndpoint(`${process.env.SOA_SERVICE_HOST}/VolumeService/VolumeService.svc`);
 
-                const getClimateData: (options: any) => { result: { GetClimateDataResult: { MeasureDataResponseMessage: {PeriodEnd: Date, PeriodStart: Date, Volume: number}[] } } } = client['VolumeServiceHandler']['BasicHttpBinding_IVolumeService']['GetClimateData'];
+                const getClimateData: (options: SOAPParam) => SOAPResponse = client['VolumeServiceHandler']['BasicHttpBinding_IVolumeService']['GetClimateData'];
                 const postalCode = '3007GA';
                 const start = moment(data[0].when).format('YYYY-MM-DDTHH:mm:ss');
                 const end = moment(data[data.length-1].when).format('YYYY-MM-DDTHH:mm:ss');
@@ -130,7 +130,7 @@ export class DataImporter {
             });
         });
 
-        function generateParams(type: string, start: string, end: string, postalCode: string) {
+        function generateParams(type: string, start: string, end: string, postalCode: string): SOAPParam {
             return {
                 message: {
                     LocationID: null,
@@ -206,5 +206,28 @@ export class DataImporter {
                 }
             });
         });
+    }
+}
+
+interface SOAPParam {
+    message: {
+        LocationID: null,
+        PostalCode: string,
+        PeriodStart: string,
+        PeriodEnd: string,
+        ClimateType: string,
+    }
+}
+
+interface SOAPResponse {
+    envelope: string,
+    result: {
+        GetClimateDataResult: {
+            MeasureDataResponseMessage: {
+                PeriodEnd: Date,
+                PeriodStart: Date,
+                Volume: number
+            }[]
+        }
     }
 }
