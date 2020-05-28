@@ -112,18 +112,21 @@ export class DataImporter {
                 ]);
             
                 for (let i = 0; i < data.length; i++) {
-                    console.log(temp.result.GetClimateDataResult.MeasureDataResponseMessage[0]);
                     const index = temp.result.GetClimateDataResult.MeasureDataResponseMessage.findIndex(x => x.PeriodStart.getTime() === data[i].when.getTime());
-                    console.log(index);
                     
-                    data[i].outside = {
-                        temperature: temp.result.GetClimateDataResult.MeasureDataResponseMessage[index].Volume,
-                        solarRadiation: solarRadiation.result.GetClimateDataResult.MeasureDataResponseMessage[index].Volume,
-                        humidity: humidity.result.GetClimateDataResult.MeasureDataResponseMessage[index].Volume,
-                        windSpeed: windSpeed.result.GetClimateDataResult.MeasureDataResponseMessage[index].Volume,
-                        windDirection: windDirection.result.GetClimateDataResult.MeasureDataResponseMessage[index].Volume,
-                        rainfall: rainfall.result.GetClimateDataResult.MeasureDataResponseMessage[index].Volume,
-                    };
+                    if (index !== -1) {
+                        data[i].outside = {
+                            temperature: temp.result.GetClimateDataResult.MeasureDataResponseMessage[index].Volume,
+                            solarRadiation: solarRadiation.result.GetClimateDataResult.MeasureDataResponseMessage[index].Volume,
+                            humidity: humidity.result.GetClimateDataResult.MeasureDataResponseMessage[index].Volume,
+                            windSpeed: windSpeed.result.GetClimateDataResult.MeasureDataResponseMessage[index].Volume,
+                            windDirection: windDirection.result.GetClimateDataResult.MeasureDataResponseMessage[index].Volume,
+                            rainfall: rainfall.result.GetClimateDataResult.MeasureDataResponseMessage[index].Volume,
+                        };
+                    }
+                    else {
+                        console.log(data[i]);
+                    }
                 }
 
                 resolve(data);
