@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "ts-node src/main.ts",
-    "build": "rm -rf dist && tsc && mkdir dist/data/csv && cp -r src/data/csv dist/data/csv",
+    "build": "rm -rf dist && tsc && mkdir dist/data/csv && cp -r src/data/csv dist/data",
     "test": "nyc --reporter=lcov --reporter=text mocha --require ts-node/register \"test/**/*.spec.ts\" --reporter=nyan"
   },
   "author": "",
