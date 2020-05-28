@@ -87,6 +87,8 @@ export class DataImporter {
                 if (err) {
                     reject(err);
                 }
+
+                client.setEndpoint(`${process.env.SOA_SERVICE_HOST}/VolumeService/VolumeService.svc`);
             
                 const getClimateData: (options: any) => { GetClimateDataResult: { MeasureDataResponseMessage: {PeriodEnd: Date, PeriodStart: Date, Volume: number}[] } } = client['VolumeServiceHandler']['BasicHttpBinding_IVolumeService']['GetClimateData'];
                 const postalCode = '3007GA';
