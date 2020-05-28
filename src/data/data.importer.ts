@@ -112,6 +112,7 @@ export class DataImporter {
                 ]);
             
                 for (let i = 0; i < data.length; i++) {
+                    console.log(temp);
                     const index = temp.GetClimateDataResult.MeasureDataResponseMessage.findIndex(x => x.PeriodStart.getTime() === data[i].when.getTime());
                     
                     data[i].outside = {
