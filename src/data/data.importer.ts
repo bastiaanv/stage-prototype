@@ -90,7 +90,7 @@ export class DataImporter {
 
                 client.setEndpoint(`${process.env.SOA_SERVICE_HOST}/VolumeService/VolumeService.svc`);
 
-                const getClimateData: (options: any) => { GetClimateDataResult: { MeasureDataResponseMessage: {PeriodEnd: Date, PeriodStart: Date, Volume: number}[] } } = client['VolumeServiceHandler']['BasicHttpBinding_IVolumeService']['GetClimateData'];
+                const getClimateData: (options: any) => { result: { GetClimateDataResult: { MeasureDataResponseMessage: {PeriodEnd: Date, PeriodStart: Date, Volume: number}[] } } } = client['VolumeServiceHandler']['BasicHttpBinding_IVolumeService']['GetClimateData'];
                 const postalCode = '3007GA';
                 const start = moment(data[0].when).format('YYYY-MM-DDTHH:mm:ss');
                 const end = moment(data[data.length-1].when).format('YYYY-MM-DDTHH:mm:ss');
@@ -112,16 +112,16 @@ export class DataImporter {
                 ]);
             
                 for (let i = 0; i < data.length; i++) {
-                    console.log(Object.keys(temp));
-                    const index = temp.GetClimateDataResult.MeasureDataResponseMessage.findIndex(x => x.PeriodStart.getTime() === data[i].when.getTime());
+                    console.log(Object.keys(temp.result));
+                    const index = temp.result.GetClimateDataResult.MeasureDataResponseMessage.findIndex(x => x.PeriodStart.getTime() === data[i].when.getTime());
                     
                     data[i].outside = {
-                        temperature: temp.GetClimateDataResult.MeasureDataResponseMessage[index].Volume,
-                        solarRadiation: solarRadiation.GetClimateDataResult.MeasureDataResponseMessage[index].Volume,
-                        humidity: humidity.GetClimateDataResult.MeasureDataResponseMessage[index].Volume,
-                        windSpeed: windSpeed.GetClimateDataResult.MeasureDataResponseMessage[index].Volume,
-                        windDirection: windDirection.GetClimateDataResult.MeasureDataResponseMessage[index].Volume,
-                        rainfall: rainfall.GetClimateDataResult.MeasureDataResponseMessage[index].Volume,
+                        temperature: temp.result.GetClimateDataResult.MeasureDataResponseMessage[index].Volume,
+                        solarRadiation: solarRadiation.result.GetClimateDataResult.MeasureDataResponseMessage[index].Volume,
+                        humidity: humidity.result.GetClimateDataResult.MeasureDataResponseMessage[index].Volume,
+                        windSpeed: windSpeed.result.GetClimateDataResult.MeasureDataResponseMessage[index].Volume,
+                        windDirection: windDirection.result.GetClimateDataResult.MeasureDataResponseMessage[index].Volume,
+                        rainfall: rainfall.result.GetClimateDataResult.MeasureDataResponseMessage[index].Volume,
                     };
                 }
 
