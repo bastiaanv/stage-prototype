@@ -32,7 +32,7 @@ describe('Reward system', () => {
             const action = 1;
 
             const actual = rewardSystem.getReward(temp, action);
-            const expected = -0.3;
+            const expected = -0.2;
 
             expect(actual).to.equal(expected);
         });
