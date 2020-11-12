@@ -90,14 +90,9 @@ export class CyberPhysicalSystem {
     }
 
     public getReward(): number {
-        let reward = 0;
-
         // Give reward for action taken upon previous temperature
         const lastData = this.getLastData();
-        reward += this.rewardSystemControl.getReward(lastData.temperature, lastData.action, lastData.date);
-
-        // Normalize and return
-        return Normalization.reward(reward, 1);
+        return this.rewardSystemControl.getReward(lastData.temperature, lastData.action);
     }
 
     public async start(timeSerieLength: number): Promise<void> {
