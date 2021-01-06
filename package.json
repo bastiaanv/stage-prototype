@@ -13,7 +13,7 @@
   "dependencies": {
     "@tensorflow/tfjs-node-gpu": "^1.7.4",
     "@types/mssql": "^6.0.1",
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "dotenv": "^8.2.0",
     "moment": "^2.25.3",
     "mssql": "^6.2.0",
